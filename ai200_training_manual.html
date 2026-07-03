@@ -1,0 +1,1589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI-200: Developing Containerized Solutions on Azure</title>
+<style>
+:root {
+  --azure-blue: #0078d4;
+  --azure-dark: #003966;
+  --azure-light: #e6f2fb;
+  --accent-orange: #f25022;
+  --accent-green: #7fba00;
+  --accent-yellow: #ffb900;
+  --text-primary: #1a1a2e;
+  --text-secondary: #444;
+  --bg-main: #f8f9fa;
+  --bg-card: #ffffff;
+  --border: #d0d7de;
+  --code-bg: #0d1117;
+  --code-text: #e6edf3;
+  --sidebar-w: 280px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg-main);color:var(--text-primary);line-height:1.7}
+a{color:var(--azure-blue);text-decoration:none}
+a:hover{text-decoration:underline}
+
+/* SIDEBAR */
+#sidebar{position:fixed;top:0;left:0;width:var(--sidebar-w);height:100vh;background:var(--azure-dark);color:#fff;overflow-y:auto;z-index:100;padding-bottom:40px}
+#sidebar-header{padding:20px 16px;background:#002244;border-bottom:2px solid var(--azure-blue)}
+#sidebar-header h2{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#7ec8e3;margin-bottom:4px}
+#sidebar-header p{font-size:11px;color:#9ab;margin:0}
+#sidebar nav ul{list-style:none;padding:8px 0}
+#sidebar nav ul li a{display:block;padding:9px 20px;font-size:12.5px;color:#c8d8e8;border-left:3px solid transparent;transition:all .2s}
+#sidebar nav ul li a:hover,#sidebar nav ul li a.active{background:rgba(0,120,212,.25);border-left-color:var(--azure-blue);color:#fff;text-decoration:none}
+#sidebar nav ul li.section-title{padding:14px 20px 4px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:#5a7fa0}
+
+/* MAIN */
+#main{margin-left:var(--sidebar-w);min-height:100vh}
+
+/* HERO */
+#hero{background:linear-gradient(135deg,#003966 0%,#0078d4 60%,#00bcf2 100%);color:#fff;padding:60px 48px 50px;position:relative;overflow:hidden}
+#hero::after{content:'';position:absolute;right:-60px;top:-60px;width:320px;height:320px;border-radius:50%;background:rgba(255,255,255,.05)}
+#hero .badge{display:inline-block;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);border-radius:20px;padding:4px 14px;font-size:12px;font-weight:600;letter-spacing:.5px;margin-bottom:16px}
+#hero h1{font-size:32px;font-weight:800;line-height:1.2;margin-bottom:10px;max-width:700px}
+#hero p{font-size:16px;opacity:.85;max-width:580px}
+.hero-meta{display:flex;gap:24px;margin-top:24px;flex-wrap:wrap}
+.hero-meta span{background:rgba(255,255,255,.12);border-radius:8px;padding:8px 16px;font-size:13px;font-weight:500}
+
+/* CONTENT */
+#content{padding:40px 48px;max-width:1100px}
+section{margin-bottom:60px;scroll-margin-top:20px}
+h1{font-size:28px;font-weight:800;color:var(--azure-dark);border-bottom:3px solid var(--azure-blue);padding-bottom:10px;margin-bottom:24px}
+h2{font-size:21px;font-weight:700;color:var(--azure-dark);margin:32px 0 14px;padding-left:14px;border-left:4px solid var(--azure-blue)}
+h3{font-size:16px;font-weight:700;color:var(--azure-blue);margin:22px 0 10px}
+p{margin-bottom:12px;color:var(--text-secondary)}
+ul,ol{margin:10px 0 14px 24px;color:var(--text-secondary)}
+li{margin-bottom:5px}
+
+/* STAR RATINGS */
+.stars{display:inline-flex;gap:2px;margin-left:8px}
+.star{color:#ffb900;font-size:14px}
+.star.off{color:#ccc}
+
+/* CARDS / CALLOUTS */
+.callout{border-radius:10px;padding:16px 20px;margin:20px 0;border-left:4px solid}
+.callout.must-know{background:#fff8e1;border-color:#ffb900}
+.callout.must-know .callout-title{color:#e65100;font-weight:700;font-size:13px;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.callout.warning{background:#fff3f3;border-color:#d32f2f}
+.callout.warning .callout-title{color:#d32f2f;font-weight:700;font-size:13px;text-transform:uppercase;margin-bottom:8px}
+.callout.tip{background:#e8f5e9;border-color:#388e3c}
+.callout.tip .callout-title{color:#2e7d32;font-weight:700;font-size:13px;text-transform:uppercase;margin-bottom:8px}
+.callout.info{background:var(--azure-light);border-color:var(--azure-blue)}
+.callout.info .callout-title{color:var(--azure-dark);font-weight:700;font-size:13px;text-transform:uppercase;margin-bottom:8px}
+
+/* TABLES */
+.table-wrap{overflow-x:auto;margin:16px 0 24px;border-radius:8px;border:1px solid var(--border);box-shadow:0 1px 4px rgba(0,0,0,.06)}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+thead{background:var(--azure-dark);color:#fff}
+thead th{padding:11px 14px;text-align:left;font-weight:600;letter-spacing:.3px}
+tbody tr:nth-child(even){background:#f6f9fc}
+tbody tr:hover{background:#e8f2fb}
+tbody td{padding:10px 14px;border-bottom:1px solid #e8ecf0;color:var(--text-secondary)}
+
+/* CODE */
+pre{background:var(--code-bg);color:var(--code-text);border-radius:10px;padding:20px 22px;overflow-x:auto;font-size:13px;line-height:1.65;margin:14px 0 20px;position:relative}
+pre .lang-label{position:absolute;top:8px;right:12px;font-size:10px;color:#6e7681;text-transform:uppercase;letter-spacing:.8px;font-family:monospace}
+code{font-family:'Cascadia Code','Fira Code',Consolas,monospace}
+:not(pre)>code{background:#eef2f7;color:#c7254e;padding:2px 6px;border-radius:4px;font-size:13px}
+.kw{color:#ff7b72}.str{color:#a5d6ff}.cm{color:#8b949e}.fn{color:#d2a8ff}.var{color:#ffa657}.num{color:#79c0ff}
+
+/* BADGE PILLS */
+.badge-pill{display:inline-block;border-radius:12px;padding:3px 10px;font-size:11px;font-weight:600;margin:2px}
+.pill-blue{background:#dbeafe;color:#1e40af}
+.pill-orange{background:#fff7ed;color:#c2410c}
+.pill-green{background:#dcfce7;color:#166534}
+.pill-red{background:#fee2e2;color:#991b1b}
+.pill-purple{background:#f3e8ff;color:#6b21a8}
+
+/* MCQ */
+.mcq{background:#fff;border:1px solid var(--border);border-radius:10px;padding:20px;margin:14px 0;box-shadow:0 1px 4px rgba(0,0,0,.05)}
+.mcq .question{font-weight:600;margin-bottom:12px;color:var(--text-primary)}
+.mcq .options{list-style:none;margin:0;padding:0}
+.mcq .options li{padding:8px 12px;border-radius:6px;margin-bottom:6px;cursor:pointer;transition:background .15s;border:1px solid #e5e7eb;font-size:14px;color:var(--text-secondary)}
+.mcq .options li:hover{background:#f0f7ff;border-color:var(--azure-blue)}
+.mcq .options li.correct{background:#dcfce7;border-color:#16a34a;color:#166534;font-weight:600}
+.mcq .answer-box{margin-top:12px;padding:10px 14px;background:#f0f9ff;border-radius:6px;font-size:13px;display:none;color:var(--text-secondary)}
+.mcq .answer-box.show{display:block}
+.mcq .reveal-btn{margin-top:10px;background:var(--azure-blue);color:#fff;border:none;padding:7px 16px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:500}
+.mcq .reveal-btn:hover{background:#005fa3}
+
+/* FLASHCARD */
+.flashcard-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;margin:16px 0}
+.flashcard{background:#fff;border:1px solid var(--border);border-radius:10px;padding:16px;cursor:pointer;transition:box-shadow .2s;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.flashcard:hover{box-shadow:0 4px 12px rgba(0,120,212,.15)}
+.flashcard .front{font-weight:600;color:var(--azure-dark);font-size:14px;margin-bottom:8px}
+.flashcard .back{font-size:13px;color:var(--text-secondary);padding-top:8px;border-top:1px dashed #d0d7de}
+
+/* CHEAT SHEET */
+.cheat-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0}
+@media(max-width:700px){.cheat-grid{grid-template-columns:1fr}}
+.cheat-card{background:#fff;border-radius:10px;border:1px solid var(--border);padding:18px;box-shadow:0 1px 4px rgba(0,0,0,.05)}
+.cheat-card h4{font-size:13px;font-weight:700;color:var(--azure-blue);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #e8ecf0}
+
+/* PROGRESS TRACKER */
+.module-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin:20px 0}
+.module-card{background:#fff;border-radius:10px;border:2px solid var(--border);padding:14px 16px;text-align:center;transition:border-color .2s,box-shadow .2s;cursor:pointer}
+.module-card:hover{border-color:var(--azure-blue);box-shadow:0 4px 12px rgba(0,120,212,.12)}
+.module-card .num{font-size:28px;font-weight:800;color:var(--azure-blue);line-height:1}
+.module-card .title{font-size:11.5px;color:var(--text-secondary);margin-top:4px;line-height:1.4}
+.module-card.done{border-color:var(--accent-green);background:#f0fdf4}
+
+/* TOP NAV */
+#topbar{background:#fff;border-bottom:1px solid var(--border);padding:10px 48px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:90;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+#topbar .breadcrumb{font-size:13px;color:#6b7280}
+.progress-bar-wrap{width:200px;height:6px;background:#e5e7eb;border-radius:3px;overflow:hidden}
+.progress-bar-fill{height:100%;width:0%;background:var(--azure-blue);border-radius:3px;transition:width .4s}
+
+/* PRINT */
+@media print{
+  #sidebar,#topbar{display:none}
+  #main{margin-left:0}
+  #content{padding:20px}
+  pre{white-space:pre-wrap}
+}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div id="sidebar">
+  <div id="sidebar-header">
+    <h2>AI-200 Exam Prep</h2>
+    <p>Containerized Solutions on Azure</p>
+  </div>
+  <nav>
+    <ul>
+      <li class="section-title">Overview</li>
+      <li><a href="#overview">Introduction &amp; Objectives</a></li>
+      <li><a href="#decision-matrix">Hosting Decision Matrix</a></li>
+      <li class="section-title">Modules</li>
+      <li><a href="#m1">1 — Container Hosting</a></li>
+      <li><a href="#m2">2 — Azure Container Registry</a></li>
+      <li><a href="#m3">3 — ACR Tasks</a></li>
+      <li><a href="#m4">4 — App Service Containers</a></li>
+      <li><a href="#m5">5 — Orchestration Strategy</a></li>
+      <li><a href="#m6">6 — Azure Container Apps</a></li>
+      <li><a href="#m7">7 — KEDA Scaling</a></li>
+      <li><a href="#m8">8 — AKS</a></li>
+      <li><a href="#m9">9 — Monitoring &amp; Troubleshooting</a></li>
+      <li class="section-title">Exam Resources</li>
+      <li><a href="#flashcards">Flashcards</a></li>
+      <li><a href="#mcq">50-Q Practice Test</a></li>
+      <li><a href="#cheatsheet">Cheat Sheet</a></li>
+      <li><a href="#glossary">Glossary</a></li>
+      <li><a href="#lastminute">Last-Minute Tips</a></li>
+    </ul>
+  </nav>
+</div>
+
+<!-- TOPBAR -->
+<div id="topbar">
+  <span class="breadcrumb">Microsoft AI-200 &rsaquo; Containerized Solutions on Azure</span>
+  <div style="display:flex;align-items:center;gap:12px">
+    <span style="font-size:12px;color:#6b7280">Study Progress</span>
+    <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progressFill"></div></div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div id="main">
+<div id="hero">
+  <div class="badge">Microsoft AI-200 Certification</div>
+  <h1>Developing Containerized Solutions on Azure</h1>
+  <p>A complete multi-agent training manual covering ACR, AKS, Container Apps, KEDA, and more — from beginner concepts to exam-ready depth.</p>
+  <div class="hero-meta">
+    <span>&#128218; 9 Core Modules</span>
+    <span>&#9733; 50 Practice Questions</span>
+    <span>&#128196; Full Glossary &amp; Cheat Sheet</span>
+    <span>&#128295; Hands-On Labs</span>
+  </div>
+</div>
+
+<div id="content">
+
+<!-- ═══════════════════════════════════ OVERVIEW ═══════════════════════════════════ -->
+<section id="overview">
+<h1>Overview &amp; Learning Objectives</h1>
+<p>This manual covers every sub-topic within the <strong>"Develop containerized solutions on Azure"</strong> domain of the AI-200 exam. The multi-agent team approach ensures technical correctness, certification alignment, practical depth, and beginner accessibility — all in one document.</p>
+
+<div class="module-grid">
+  <div class="module-card"><div class="num">01</div><div class="title">Container Hosting Fundamentals</div></div>
+  <div class="module-card"><div class="num">02</div><div class="title">Azure Container Registry</div></div>
+  <div class="module-card"><div class="num">03</div><div class="title">ACR Tasks</div></div>
+  <div class="module-card"><div class="num">04</div><div class="title">App Service Containers</div></div>
+  <div class="module-card"><div class="num">05</div><div class="title">Orchestration Strategy</div></div>
+  <div class="module-card"><div class="num">06</div><div class="title">Azure Container Apps</div></div>
+  <div class="module-card"><div class="num">07</div><div class="title">KEDA Event Scaling</div></div>
+  <div class="module-card"><div class="num">08</div><div class="title">Azure Kubernetes Service</div></div>
+  <div class="module-card"><div class="num">09</div><div class="title">Monitoring &amp; Troubleshoot</div></div>
+</div>
+</section>
+
+<!-- ═══════════════════════════════════ DECISION MATRIX ═══════════════════════════════════ -->
+<section id="decision-matrix">
+<h1>Hosting Decision Matrix <span class="stars"><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span></span></h1>
+<p>The most-tested concept in this domain. Identify the key requirement in any scenario, then match it to the service.</p>
+
+<div class="table-wrap">
+<table>
+<thead><tr><th>Requirement</th><th>Service</th><th>Why</th></tr></thead>
+<tbody>
+<tr><td>Simplest container run / short-lived batch</td><td><span class="badge-pill pill-blue">ACI</span></td><td>Serverless, per-second billing, no management</td></tr>
+<tr><td>Single container web app or API</td><td><span class="badge-pill pill-green">App Service</span></td><td>PaaS, managed, deployment slots</td></tr>
+<tr><td>Event-driven microservices / scale to zero</td><td><span class="badge-pill pill-purple">Container Apps</span></td><td>Built-in KEDA, Dapr, serverless</td></tr>
+<tr><td>Full Kubernetes control / enterprise</td><td><span class="badge-pill pill-orange">AKS</span></td><td>Full K8s, GPU, Windows, service mesh</td></tr>
+<tr><td>No Kubernetes expertise needed</td><td><span class="badge-pill pill-purple">Container Apps</span></td><td>Kubernetes is hidden/managed</td></tr>
+<tr><td>GPU workloads (AI inference)</td><td><span class="badge-pill pill-orange">AKS</span></td><td>Only service with GPU node pool support</td></tr>
+<tr><td>Windows containers</td><td><span class="badge-pill pill-orange">AKS</span></td><td>Container Apps = Linux only</td></tr>
+<tr><td>Dapr integration</td><td><span class="badge-pill pill-purple">Container Apps</span></td><td>Dapr is natively built-in</td></tr>
+<tr><td>Existing Kubernetes YAML manifests</td><td><span class="badge-pill pill-orange">AKS</span></td><td>Direct manifest apply via kubectl</td></tr>
+<tr><td>Istio / Linkerd service mesh</td><td><span class="badge-pill pill-orange">AKS</span></td><td>Container Apps has no service mesh support</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="callout must-know">
+<div class="callout-title">&#9733; Must Know — Exam Thinking</div>
+<strong>"No K8s expertise"</strong> → Container Apps &nbsp;|&nbsp;
+<strong>"Scale to zero"</strong> → Container Apps &nbsp;|&nbsp;
+<strong>"GPU"</strong> → AKS &nbsp;|&nbsp;
+<strong>"Existing manifests"</strong> → AKS &nbsp;|&nbsp;
+<strong>"Simplest"</strong> → ACI
+</div>
+</section>
+
+<!-- ═══════════════════════════════════ MODULE 1 ═══════════════════════════════════ -->
+<section id="m1">
+<h1>Module 1 — Implement Container Application Hosting <span class="stars"><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span></span></h1>
+
+<h2>What Is a Container?</h2>
+<p><strong>Explain Like I'm 15:</strong> A container is like a meal kit delivery box. The restaurant sends you the exact ingredients, exact recipe, and exact proportions. You cook it at home and it tastes identical to the restaurant — every single time.</p>
+<p><strong>Technical Definition:</strong> A lightweight, portable, self-contained unit of software that packages application code along with its runtime dependencies, configuration, and libraries. Containers share the host operating system kernel but run in isolated user spaces.</p>
+
+<h2>Containers vs. Virtual Machines</h2>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Attribute</th><th>Virtual Machine</th><th>Container</th></tr></thead>
+<tbody>
+<tr><td>Boot time</td><td>Minutes</td><td>Seconds</td></tr>
+<tr><td>Size</td><td>Gigabytes</td><td>Megabytes</td></tr>
+<tr><td>OS</td><td>Full OS per VM</td><td>Shared host kernel</td></tr>
+<tr><td>Isolation</td><td>Full hardware isolation</td><td>Process-level isolation</td></tr>
+<tr><td>Portability</td><td>Limited</td><td>Highly portable</td></tr>
+<tr><td>Density per host</td><td>Low</td><td>High</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="callout warning">
+<div class="callout-title">&#9888; Critical Exam Trap</div>
+Containers share the HOST OS kernel. VMs do not. This is the single most important architectural distinction and appears on every exam.
+</div>
+
+<h2>Azure Container Instances (ACI)</h2>
+<p>ACI is the most basic Azure container service — serverless, fast, billed per CPU/memory second. Use it for short-lived, one-off, or batch container workloads.</p>
+
+<pre><code><span class="cm"># Deploy a container to ACI</span>
+az group create \
+  --name rg-containers-demo \
+  --location eastus
+
+az container create \
+  --resource-group rg-containers-demo \
+  --name my-ai-container \
+  --image mcr.microsoft.com/azuredocs/aci-helloworld \
+  --cpu 1 \
+  --memory 1.5 \
+  --ports 80 \
+  --dns-name-label my-ai-demo-unique123
+<span class="lang-label">bash</span></code></pre>
+
+<div class="callout info">
+<div class="callout-title">Container Terminology</div>
+<strong>Image</strong> — read-only blueprint &nbsp;|&nbsp;
+<strong>Container</strong> — running instance of an image &nbsp;|&nbsp;
+<strong>Registry</strong> — storage service for images &nbsp;|&nbsp;
+<strong>Tag</strong> — mutable version label &nbsp;|&nbsp;
+<strong>Digest</strong> — immutable SHA256 hash
+</div>
+</section>
+
+<!-- ═══════════════════════════════════ MODULE 2 ═══════════════════════════════════ -->
+<section id="m2">
+<h1>Module 2 — Azure Container Registry (ACR) <span class="stars"><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span></span></h1>
+
+<h2>Service Tiers</h2>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Feature</th><th>Basic</th><th>Standard</th><th>Premium</th></tr></thead>
+<tbody>
+<tr><td>Storage</td><td>10 GB</td><td>100 GB</td><td>500 GB</td></tr>
+<tr><td>Geo-replication</td><td>&#10007;</td><td>&#10007;</td><td><strong>&#10003;</strong></td></tr>
+<tr><td>Private Link</td><td>&#10007;</td><td>&#10007;</td><td><strong>&#10003;</strong></td></tr>
+<tr><td>Content Trust</td><td>&#10007;</td><td>&#10007;</td><td><strong>&#10003;</strong></td></tr>
+<tr><td>Zone Redundancy</td><td>&#10007;</td><td>&#10007;</td><td><strong>&#10003;</strong></td></tr>
+<tr><td>Customer-managed keys</td><td>&#10007;</td><td>&#10007;</td><td><strong>&#10003;</strong></td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="callout must-know">
+<div class="callout-title">&#9733; Must Know — Premium Only</div>
+Geo-replication, Private Link, Content Trust, Zone Redundancy, and Customer-Managed Keys are ALL Premium-tier features. Any exam scenario requiring these → the answer is Premium.
+</div>
+
+<h2>RBAC Roles</h2>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Role</th><th>Can Pull?</th><th>Can Push?</th><th>Can Delete?</th></tr></thead>
+<tbody>
+<tr><td><strong>AcrPull</strong></td><td>&#10003;</td><td>&#10007;</td><td>&#10007;</td></tr>
+<tr><td><strong>AcrPush</strong></td><td>&#10003;</td><td>&#10003;</td><td>&#10007;</td></tr>
+<tr><td><strong>AcrDelete</strong></td><td>&#10003;</td><td>&#10003;</td><td>&#10003;</td></tr>
+<tr><td><strong>Reader</strong></td><td><span style="color:#d32f2f;font-weight:700">&#10007; NO</span></td><td>&#10007;</td><td>&#10007;</td></tr>
+<tr><td><strong>AcrImageSigner</strong></td><td>&#10003;</td><td>Sign only</td><td>&#10007;</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="callout warning">
+<div class="callout-title">&#9888; Classic Exam Trap</div>
+The <code>Reader</code> role does NOT allow pulling images. You must use <code>AcrPull</code>. This distinction appears in almost every ACR question.
+</div>
+
+<h2>Authentication Methods</h2>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Method</th><th>Use Case</th><th>Recommendation</th></tr></thead>
+<tbody>
+<tr><td>Admin account</td><td>Development only</td><td><span class="badge-pill pill-red">Never in production</span></td></tr>
+<tr><td>Service Principal</td><td>CI/CD pipelines</td><td><span class="badge-pill pill-blue">Acceptable</span></td></tr>
+<tr><td>Managed Identity</td><td>Azure services (AKS, App Service)</td><td><span class="badge-pill pill-green">Recommended</span></td></tr>
+<tr><td>Repository-scoped token</td><td>Fine-grained access</td><td><span class="badge-pill pill-blue">Acceptable</span></td></tr>
+</tbody>
+</table>
+</div>
+
+<h2>Create ACR</h2>
+<pre><code>az acr create \
+  --resource-group rg-containers-demo \
+  --name contosobankacr \
+  --sku Premium \
+  --location eastus \
+  --admin-enabled false
+<span class="lang-label">bash</span></code></pre>
+
+<h2>Attach ACR to AKS (Managed Identity)</h2>
+<pre><code><span class="cm"># Single command — configures kubelet MI with AcrPull automatically</span>
+az aks update \
+  --name my-aks-cluster \
+  --resource-group rg-containers-demo \
+  --attach-acr contosobankacr
+<span class="lang-label">bash</span></code></pre>
+
+<h2>Geo-Replication (Premium)</h2>
+<pre><code>az acr replication create \
+  --registry contosobankacr \
+  --location westeurope
+
+az acr replication create \
+  --registry contosobankacr \
+  --location southeastasia
+<span class="lang-label">bash</span></code></pre>
+
+<div class="callout tip">
+<div class="callout-title">&#9989; Best Practice</div>
+Push once to any replicated registry — ACR automatically synchronizes the image to all replicas. You do NOT push separately to each region.
+</div>
+
+<h2>Private Link (Premium)</h2>
+<pre><code>az network private-endpoint create \
+  --name pe-acr-contoso \
+  --resource-group rg-containers-demo \
+  --vnet-name vnet-contoso \
+  --subnet subnet-private-endpoints \
+  --private-connection-resource-id $(az acr show --name contosobankacr --query id --output tsv) \
+  --group-id registry \
+  --connection-name pe-connection-acr
+
+<span class="cm"># REQUIRED: private DNS zone for ACR</span>
+az network private-dns zone create \
+  --resource-group rg-containers-demo \
+  --name privatelink.azurecr.io
+<span class="lang-label">bash</span></code></pre>
+
+<div class="callout warning">
+<div class="callout-title">&#9888; DNS Required</div>
+Private Link alone is not enough. You MUST configure the private DNS zone <code>privatelink.azurecr.io</code> and link it to your VNet, otherwise DNS resolution for the ACR endpoint will fail.
+</div>
+
+<h2>Retention Policy</h2>
+<pre><code><span class="cm"># Delete untagged manifests after 30 days</span>
+az acr config retention update \
+  --registry contosobankacr \
+  --status enabled \
+  --days 30 \
+  --type UntaggedManifests
+<span class="lang-label">bash</span></code></pre>
+
+<div class="callout info">
+<div class="callout-title">Note</div>
+Retention policies only delete <strong>untagged</strong> manifests. Tagged images are never automatically deleted.
+</div>
+
+<h2>Content Trust (Premium)</h2>
+<pre><code><span class="cm"># Enable Content Trust on the registry</span>
+az acr config content-trust update \
+  --name contosobankacr \
+  --status enabled
+
+<span class="cm"># Enable Docker Content Trust (signs images on push)</span>
+<span class="kw">export</span> DOCKER_CONTENT_TRUST=<span class="num">1</span>
+docker push contosobankacr.azurecr.io/myapp/api:1.0.0
+<span class="lang-label">bash</span></code></pre>
+
+<h2>Bicep — ACR</h2>
+<pre><code>resource acr <span class="str">'Microsoft.ContainerRegistry/registries@2023-07-01'</span> = {
+  name: <span class="str">'contosobankacr'</span>
+  location: <span class="str">'eastus'</span>
+  sku: {
+    name: <span class="str">'Premium'</span>
+  }
+  properties: {
+    adminUserEnabled: <span class="kw">false</span>
+    zoneRedundancy: <span class="str">'Enabled'</span>
+  }
+}
+
+resource replication <span class="str">'Microsoft.ContainerRegistry/registries/replications@2023-07-01'</span> = {
+  parent: acr
+  name: <span class="str">'westeurope'</span>
+  location: <span class="str">'westeurope'</span>
+  properties: {
+    regionEndpointEnabled: <span class="kw">true</span>
+  }
+}
+<span class="lang-label">bicep</span></code></pre>
+
+<h2>Troubleshooting ACR</h2>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Problem</th><th>Likely Cause</th><th>Solution</th></tr></thead>
+<tbody>
+<tr><td><code>UNAUTHORIZED: authentication required</code></td><td>Not logged in</td><td><code>az acr login --name &lt;registry&gt;</code></td></tr>
+<tr><td>403 Forbidden</td><td>Missing RBAC role</td><td>Assign <code>AcrPull</code> or <code>AcrPush</code></td></tr>
+<tr><td>Pull fails from AKS</td><td>AKS identity lacks AcrPull</td><td><code>az aks update --attach-acr &lt;acr&gt;</code></td></tr>
+<tr><td>Pull fails from private network</td><td>Missing Private Link / DNS</td><td>Verify private endpoint and DNS zone</td></tr>
+<tr><td>Geo-replication sync delay</td><td>Replication takes 1–2 min</td><td>Wait; check replication status</td></tr>
+<tr><td>Content Trust pull fails</td><td>Image not signed</td><td>Sign image with Docker trust key</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<!-- ═══════════════════════════════════ MODULE 3 ═══════════════════════════════════ -->
+<section id="m3">
+<h1>Module 3 — ACR Tasks <span class="stars"><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star off">&#9733;</span></span></h1>
+
+<h2>Task Types</h2>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Type</th><th>Trigger</th><th>Best For</th></tr></thead>
+<tbody>
+<tr><td><strong>Quick Task</strong></td><td>Manual (on-demand)</td><td>Fast ad-hoc builds, no local Docker</td></tr>
+<tr><td><strong>Automatic Task</strong></td><td>Git commit or base image update</td><td>Continuous integration</td></tr>
+<tr><td><strong>Scheduled Task</strong></td><td>Cron expression</td><td>Nightly builds, maintenance</td></tr>
+<tr><td><strong>Multi-step Task</strong></td><td>Any of the above</td><td>Build + test + push pipelines</td></tr>
+</tbody>
+</table>
+</div>
+
+<h2>Quick Task</h2>
+<pre><code><span class="cm"># Build and push directly in ACR — no local Docker needed</span>
+az acr build \
+  --registry contosobankacr \
+  --image myapp/api:1.0.0 \
+  .
+
+<span class="cm"># From a GitHub repo</span>
+az acr build \
+  --registry contosobankacr \
+  --image myapp/api:1.0.0 \
+  https://github.com/contoso/myapp.git
+<span class="lang-label">bash</span></code></pre>
+
+<h2>Automatic Task — Git Trigger</h2>
+<pre><code>az acr task create \
+  --registry contosobankacr \
+  --name build-on-commit \
+  --image myapp/api:<span class="var">{{.Run.ID}}</span> \
+  --context https://github.com/contoso/myapp.git \
+  --file Dockerfile \
+  --git-access-token &lt;pat&gt;
+<span class="lang-label">bash</span></code></pre>
+
+<div class="callout warning">
+<div class="callout-title">&#9888; Base Image Update Trigger Limitation</div>
+Base image update triggers only work when the base image is in the <strong>same ACR registry</strong> or in <strong>MCR (Microsoft Container Registry)</strong>. They do NOT work for images in third-party private registries.
+</div>
+
+<h2>Scheduled Task</h2>
+<pre><code>az acr task create \
+  --registry contosobankacr \
+  --name nightly-build \
+  --image myapp/api:nightly \
+  --context https://github.com/contoso/myapp.git \
+  --file Dockerfile \
+  --schedule <span class="str">"0 2 * * *"</span>   <span class="cm"># 2:00 AM every day</span>
+<span class="lang-label">bash</span></code></pre>
+
+<h2>Multi-Step Task YAML</h2>
+<pre><code><span class="cm"># acr-task.yaml</span>
+<span class="kw">version</span>: v1.1.0
+
+<span class="kw">steps</span>:
+  - <span class="var">id</span>: build-app
+    <span class="var">build</span>: &gt;
+      -t <span class="fn">$Registry</span>/myapp/api:<span class="fn">$ID</span>
+      -f Dockerfile .
+
+  - <span class="var">id</span>: run-tests
+    <span class="var">cmd</span>: <span class="fn">$Registry</span>/myapp/api:<span class="fn">$ID</span> dotnet test
+    <span class="var">when</span>: [build-app]      <span class="cm"># Only runs if build-app succeeds</span>
+
+  - <span class="var">id</span>: push-app
+    <span class="var">push</span>:
+      - <span class="fn">$Registry</span>/myapp/api:<span class="fn">$ID</span>
+      - <span class="fn">$Registry</span>/myapp/api:latest
+    <span class="var">when</span>: [run-tests]      <span class="cm"># Only runs if tests pass</span>
+<span class="lang-label">yaml</span></code></pre>
+
+<h3>Built-in Task Variables</h3>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Variable</th><th>Value</th></tr></thead>
+<tbody>
+<tr><td><code>$Registry</code></td><td>Login server (e.g., <code>contosobankacr.azurecr.io</code>)</td></tr>
+<tr><td><code>$ID</code></td><td>Unique run ID (alphanumeric)</td></tr>
+<tr><td><code>$Date</code></td><td>Current UTC date (YYYYMMDD)</td></tr>
+<tr><td><code>$OS</code></td><td><code>linux</code> or <code>windows</code></td></tr>
+</tbody>
+</table>
+</div>
+
+<pre><code><span class="cm"># Run multi-step task</span>
+az acr run --registry contosobankacr --file acr-task.yaml .
+
+<span class="cm"># View task run logs</span>
+az acr task logs --registry contosobankacr --run-id &lt;run-id&gt;
+<span class="lang-label">bash</span></code></pre>
+</section>
+
+<!-- ═══════════════════════════════════ MODULE 4 ═══════════════════════════════════ -->
+<section id="m4">
+<h1>Module 4 — Deploy Containers to Azure App Service <span class="stars"><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star off">&#9733;</span></span></h1>
+
+<h2>Deploy from ACR</h2>
+<pre><code><span class="cm"># 1. Create a Linux App Service Plan</span>
+az appservice plan create \
+  --name plan-contoso-linux \
+  --resource-group rg-containers-demo \
+  --sku P1v3 \
+  --is-linux
+
+<span class="cm"># 2. Create the web app with a container image</span>
+az webapp create \
+  --resource-group rg-containers-demo \
+  --plan plan-contoso-linux \
+  --name contoso-api-app \
+  --deployment-container-image-name contosobankacr.azurecr.io/myapp/api:1.0.0
+<span class="lang-label">bash</span></code></pre>
+
+<h2>Managed Identity for ACR Pull</h2>
+<pre><code><span class="cm"># Step 1: Assign system-assigned Managed Identity</span>
+az webapp identity assign \
+  --name contoso-api-app \
+  --resource-group rg-containers-demo
+
+<span class="cm"># Step 2: Grant AcrPull role to the web app's identity</span>
+WEBAPP_IDENTITY=$(az webapp identity show \
+  --name contoso-api-app \
+  --resource-group rg-containers-demo \
+  --query principalId --output tsv)
+
+az role assignment create \
+  --assignee $WEBAPP_IDENTITY \
+  --role AcrPull \
+  --scope $(az acr show --name contosobankacr --query id --output tsv)
+
+<span class="cm"># Step 3: Enable Managed Identity credential usage (REQUIRED!)</span>
+az resource update \
+  --ids $(az webapp show --name contoso-api-app --resource-group rg-containers-demo --query id --output tsv) \
+  --set properties.acrUseManagedIdentityCreds=true
+<span class="lang-label">bash</span></code></pre>
+
+<div class="callout must-know">
+<div class="callout-title">&#9733; Must Know</div>
+Setting <code>acrUseManagedIdentityCreds=true</code> is REQUIRED. Assigning the MI role alone is not sufficient — this property must be explicitly enabled for App Service to use Managed Identity for ACR pulls.
+</div>
+
+<h2>App Settings &amp; Environment Variables</h2>
+<pre><code>az webapp config appsettings set \
+  --name contoso-api-app \
+  --resource-group rg-containers-demo \
+  --settings \
+    DATABASE_URL=<span class="str">"postgresql://db.contoso.com/appdb"</span> \
+    AI_API_KEY=<span class="str">"@Microsoft.KeyVault(SecretUri=https://kv.vault.azure.net/secrets/key/)"</span> \
+    WEBSITES_PORT=<span class="str">"8080"</span>
+<span class="lang-label">bash</span></code></pre>
+
+<h2>Deployment Slots</h2>
+<pre><code><span class="cm"># Create staging slot (requires Standard+ plan)</span>
+az webapp deployment slot create \
+  --name contoso-api-app \
+  --resource-group rg-containers-demo \
+  --slot staging
+
+<span class="cm"># Deploy new version to staging</span>
+az webapp config container set \
+  --name contoso-api-app --slot staging \
+  --docker-custom-image-name contosobankacr.azurecr.io/myapp/api:2.0.0
+
+<span class="cm"># Zero-downtime swap to production</span>
+az webapp deployment slot swap \
+  --name contoso-api-app \
+  --resource-group rg-containers-demo \
+  --slot staging --target-slot production
+<span class="lang-label">bash</span></code></pre>
+
+<div class="table-wrap">
+<table>
+<thead><tr><th>Setting</th><th>Value / Purpose</th></tr></thead>
+<tbody>
+<tr><td><code>acrUseManagedIdentityCreds</code></td><td><code>true</code> — use MI for ACR pull</td></tr>
+<tr><td><code>WEBSITES_PORT</code></td><td>Port your container listens on</td></tr>
+<tr><td><code>healthCheckPath</code></td><td>Path App Service polls for health</td></tr>
+<tr><td>Key Vault ref format</td><td><code>@Microsoft.KeyVault(SecretUri=...)</code></td></tr>
+<tr><td>Slot swap tier</td><td>Standard tier or above required</td></tr>
+</tbody>
+</table>
+</div>
+
+<h2>Bicep — App Service with Container</h2>
+<pre><code>resource appServicePlan <span class="str">'Microsoft.Web/serverfarms@2023-01-01'</span> = {
+  name: <span class="str">'plan-contoso-linux'</span>
+  location: <span class="str">'eastus'</span>
+  kind: <span class="str">'linux'</span>
+  sku: { name: <span class="str">'P1v3'</span>, tier: <span class="str">'PremiumV3'</span> }
+  properties: {
+    reserved: <span class="kw">true</span>   <span class="cm">// Required for Linux plans</span>
+  }
+}
+
+resource webApp <span class="str">'Microsoft.Web/sites@2023-01-01'</span> = {
+  name: <span class="str">'contoso-api-app'</span>
+  location: <span class="str">'eastus'</span>
+  identity: { type: <span class="str">'SystemAssigned'</span> }
+  properties: {
+    serverFarmId: appServicePlan.id
+    siteConfig: {
+      linuxFxVersion: <span class="str">'DOCKER|contosobankacr.azurecr.io/myapp/api:1.0.0'</span>
+      acrUseManagedIdentityCreds: <span class="kw">true</span>
+    }
+  }
+}
+<span class="lang-label">bicep</span></code></pre>
+</section>
+
+<!-- ═══════════════════════════════════ MODULE 5 ═══════════════════════════════════ -->
+<section id="m5">
+<h1>Module 5 — Container Orchestration Strategy <span class="stars"><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span></span></h1>
+
+<h2>AKS vs. Azure Container Apps</h2>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Dimension</th><th>AKS</th><th>Container Apps</th></tr></thead>
+<tbody>
+<tr><td>Foundation</td><td>Full Kubernetes</td><td>Managed Kubernetes (hidden)</td></tr>
+<tr><td>K8s expertise needed</td><td>Yes</td><td>No</td></tr>
+<tr><td>Scale to zero</td><td>Possible (complex)</td><td>Native, easy</td></tr>
+<tr><td>KEDA</td><td>Manual setup</td><td><strong>Built-in</strong></td></tr>
+<tr><td>Dapr</td><td>Manual setup</td><td><strong>Built-in</strong></td></tr>
+<tr><td>GPU support</td><td>Yes</td><td>No</td></tr>
+<tr><td>Windows containers</td><td>Yes</td><td>No (Linux only)</td></tr>
+<tr><td>Service mesh (Istio)</td><td>Yes</td><td>No</td></tr>
+<tr><td>Pricing</td><td>Pay for VMs</td><td>Pay per vCPU/memory used</td></tr>
+<tr><td>Infrastructure visible</td><td>Yes (nodes, node pools)</td><td>No (serverless)</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="callout tip">
+<div class="callout-title">&#128161; Key Insight</div>
+Azure Container Apps is <em>built on Kubernetes</em> internally, but it hides all Kubernetes APIs from you. You get the power of K8s scaling with none of the management overhead.
+</div>
+</section>
+
+<!-- ═══════════════════════════════════ MODULE 6 ═══════════════════════════════════ -->
+<section id="m6">
+<h1>Module 6 — Azure Container Apps <span class="stars"><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span></span></h1>
+
+<h2>Architecture</h2>
+<pre><code>Container Apps Environment
+├── Shared VNet (optional)
+├── Shared Log Analytics workspace
+│
+├── Container App: api-service
+│   ├── Revision: api-service--abc123 (80% traffic)
+│   ├── Revision: api-service--def456 (20% traffic)
+│   └── Ingress: External HTTPS (auto TLS)
+│
+└── Container App: background-worker
+    ├── Revision: latest (100%)
+    └── Ingress: Disabled (background only)
+<span class="lang-label">diagram</span></code></pre>
+
+<h2>Create Environment &amp; Deploy</h2>
+<pre><code><span class="cm"># Create environment</span>
+az containerapp env create \
+  --name env-contoso-prod \
+  --resource-group rg-containers-demo \
+  --location eastus \
+  --logs-workspace-id $LOG_ANALYTICS_WORKSPACE_ID \
+  --logs-workspace-key $LOG_ANALYTICS_WORKSPACE_KEY
+
+<span class="cm"># Deploy a Container App</span>
+az containerapp create \
+  --name api-service \
+  --resource-group rg-containers-demo \
+  --environment env-contoso-prod \
+  --image contosobankacr.azurecr.io/myapp/api:1.0.0 \
+  --registry-server contosobankacr.azurecr.io \
+  --registry-identity system \
+  --target-port 8080 \
+  --ingress external \
+  --min-replicas 0 \
+  --max-replicas 10 \
+  --cpu 0.5 --memory 1.0Gi
+<span class="lang-label">bash</span></code></pre>
+
+<h2>Ingress Types</h2>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Type</th><th>Accessible From</th><th>TLS</th><th>Use Case</th></tr></thead>
+<tbody>
+<tr><td><code>external</code></td><td>Public internet</td><td>Automatic</td><td>Public APIs, web apps</td></tr>
+<tr><td><code>internal</code></td><td>Same environment only</td><td>Auto (internal)</td><td>Internal microservices</td></tr>
+<tr><td>Disabled</td><td>No HTTP at all</td><td>N/A</td><td>Background workers</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="callout must-know">
+<div class="callout-title">&#9733; Internal DNS</div>
+Apps in the same Container Apps environment communicate via <code>http://&lt;app-name&gt;</code> — just the app name, no port, no domain suffix. Apps in different environments cannot communicate internally.
+</div>
+
+<h2>Revisions &amp; Traffic Splitting</h2>
+<pre><code><span class="cm"># Enable multiple revision mode</span>
+az containerapp revision set-mode \
+  --name api-service \
+  --resource-group rg-containers-demo \
+  --mode multiple
+
+<span class="cm"># Deploy new version (creates a new revision)</span>
+az containerapp update \
+  --name api-service \
+  --resource-group rg-containers-demo \
+  --image contosobankacr.azurecr.io/myapp/api:2.0.0
+
+<span class="cm"># Split traffic: 80% v1 / 20% v2</span>
+az containerapp ingress traffic set \
+  --name api-service \
+  --resource-group rg-containers-demo \
+  --revision-weight \
+    api-service--v1=80 \
+    api-service--v2=20
+<span class="lang-label">bash</span></code></pre>
+
+<div class="callout warning">
+<div class="callout-title">&#9888; Traffic Weight Rule</div>
+Traffic weights MUST sum to exactly 100%. Both revisions must be in <strong>Active</strong> state. Updating any app setting (including env vars) creates a NEW revision automatically.
+</div>
+
+<h2>Secrets</h2>
+<pre><code><span class="cm"># Add a secret</span>
+az containerapp secret set \
+  --name api-service \
+  --resource-group rg-containers-demo \
+  --secrets db-conn=<span class="str">"Server=db.contoso.com;Password=SuperSecret"</span>
+
+<span class="cm"># Reference secret as an environment variable</span>
+az containerapp update \
+  --name api-service \
+  --resource-group rg-containers-demo \
+  --set-env-vars <span class="str">"DATABASE_URL=secretref:db-conn"</span>
+<span class="lang-label">bash</span></code></pre>
+
+<h2>Scaling</h2>
+<pre><code><span class="cm"># HTTP scaling</span>
+az containerapp update \
+  --name api-service \
+  --resource-group rg-containers-demo \
+  --min-replicas 0 \
+  --max-replicas 20 \
+  --scale-rule-name http-rule \
+  --scale-rule-type http \
+  --scale-rule-http-concurrency 50
+
+<span class="cm"># Service Bus queue scaling</span>
+az containerapp update \
+  --name order-processor \
+  --resource-group rg-containers-demo \
+  --min-replicas 0 \
+  --max-replicas 30 \
+  --scale-rule-name servicebus-rule \
+  --scale-rule-type azure-servicebus \
+  --scale-rule-metadata queueName=orders messageCount=5 namespace=sb-contoso \
+  --scale-rule-auth triggerParameter=connection secretRef=servicebus-conn
+<span class="lang-label">bash</span></code></pre>
+
+<h2>Dapr Overview</h2>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Building Block</th><th>What It Does</th></tr></thead>
+<tbody>
+<tr><td>Service invocation</td><td>Call other services by name with auto-retry</td></tr>
+<tr><td>Pub/Sub</td><td>Publish and subscribe to messages</td></tr>
+<tr><td>State management</td><td>Store/retrieve key-value state</td></tr>
+<tr><td>Bindings</td><td>Connect to external systems</td></tr>
+<tr><td>Secrets</td><td>Access secrets from Key Vault</td></tr>
+</tbody>
+</table>
+</div>
+
+<pre><code>az containerapp dapr enable \
+  --name api-service \
+  --resource-group rg-containers-demo \
+  --dapr-app-id api-service \
+  --dapr-app-port 8080 \
+  --dapr-app-protocol http
+
+<span class="cm"># Dapr service invocation URL pattern:</span>
+<span class="cm"># http://localhost:3500/v1.0/invoke/&lt;app-id&gt;/method/&lt;path&gt;</span>
+<span class="lang-label">bash</span></code></pre>
+</section>
+
+<!-- ═══════════════════════════════════ MODULE 7 ═══════════════════════════════════ -->
+<section id="m7">
+<h1>Module 7 — KEDA: Event-Driven Scaling <span class="stars"><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span></span></h1>
+
+<h2>How KEDA Works</h2>
+<p><strong>Explain Like I'm 15:</strong> Normal autoscaling hires more staff when tables fill up. KEDA is smarter — it hires staff when it sees the reservation list getting long, <em>before</em> the tables fill.</p>
+<p>KEDA monitors an external event source (queue depth, message count), tells Kubernetes to scale pods accordingly, and scales down to zero when the source goes quiet.</p>
+
+<h2>Scalers Reference</h2>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Scaler</th><th>Event Source</th><th>Scale to Zero?</th></tr></thead>
+<tbody>
+<tr><td><code>azure-servicebus</code></td><td>Service Bus queue / topic</td><td><span class="badge-pill pill-green">Yes</span></td></tr>
+<tr><td><code>azure-queue</code></td><td>Azure Storage Queue</td><td><span class="badge-pill pill-green">Yes</span></td></tr>
+<tr><td><code>azure-eventhub</code></td><td>Azure Event Hubs</td><td><span class="badge-pill pill-green">Yes</span></td></tr>
+<tr><td><code>http</code></td><td>HTTP concurrent requests</td><td><span class="badge-pill pill-green">Yes</span></td></tr>
+<tr><td><code>kafka</code></td><td>Apache Kafka lag</td><td><span class="badge-pill pill-green">Yes</span></td></tr>
+<tr><td><code>cron</code></td><td>Time schedule</td><td><span class="badge-pill pill-green">Yes</span></td></tr>
+<tr><td><code>cpu</code></td><td>CPU utilization</td><td><span class="badge-pill pill-red">NO</span></td></tr>
+<tr><td><code>memory</code></td><td>Memory utilization</td><td><span class="badge-pill pill-red">NO</span></td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="callout must-know">
+<div class="callout-title">&#9733; Must Know — Scale to Zero</div>
+CPU and Memory scalers <strong>CANNOT</strong> scale to zero. They need at least one running pod to measure metrics. All event-based scalers (Service Bus, Queue, HTTP, Kafka, etc.) CAN scale to zero.
+</div>
+
+<h2>ScaledObject YAML — Service Bus</h2>
+<pre><code><span class="kw">apiVersion</span>: keda.sh/v1alpha1
+<span class="kw">kind</span>: ScaledObject
+<span class="kw">metadata</span>:
+  name: order-processor-scaledobject
+<span class="kw">spec</span>:
+  <span class="var">scaleTargetRef</span>:
+    name: order-processor-deployment
+  <span class="var">minReplicaCount</span>: 0    <span class="cm"># Scale to zero when queue is empty</span>
+  <span class="var">maxReplicaCount</span>: 30
+  <span class="var">pollingInterval</span>: 10   <span class="cm"># Check every 10 seconds</span>
+  <span class="var">cooldownPeriod</span>: 300   <span class="cm"># Wait 5 min before scaling down</span>
+  <span class="var">triggers</span>:
+    - type: azure-servicebus
+      metadata:
+        queueName: orders
+        namespace: sb-contoso
+        messageCount: <span class="str">"5"</span>    <span class="cm"># 1 pod per 5 messages</span>
+      authenticationRef:
+        name: servicebus-auth
+<span class="lang-label">yaml</span></code></pre>
+
+<pre><code><span class="kw">apiVersion</span>: keda.sh/v1alpha1
+<span class="kw">kind</span>: TriggerAuthentication
+<span class="kw">metadata</span>:
+  name: servicebus-auth
+<span class="kw">spec</span>:
+  <span class="var">secretTargetRef</span>:
+    - parameter: connection
+      name: servicebus-secret
+      key: connection-string
+<span class="lang-label">yaml</span></code></pre>
+
+<h2>Cron Scaler</h2>
+<pre><code><span class="kw">triggers</span>:
+  - type: cron
+    metadata:
+      timezone: America/New_York
+      start: <span class="str">"0 8 * * 1-5"</span>    <span class="cm"># 8 AM Mon–Fri</span>
+      end: <span class="str">"0 18 * * 1-5"</span>      <span class="cm"># 6 PM Mon–Fri</span>
+      desiredReplicas: <span class="str">"10"</span>
+<span class="lang-label">yaml</span></code></pre>
+
+<h2>KEDA: Container Apps vs AKS</h2>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Feature</th><th>Container Apps</th><th>AKS</th></tr></thead>
+<tbody>
+<tr><td>Installation</td><td>None (built-in)</td><td><code>helm install keda</code></td></tr>
+<tr><td>ScaledObject YAML</td><td>Not needed (use CLI)</td><td>Required</td></tr>
+<tr><td>Scale to zero</td><td>Native</td><td>Supported</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<!-- ═══════════════════════════════════ MODULE 8 ═══════════════════════════════════ -->
+<section id="m8">
+<h1>Module 8 — Deploy &amp; Manage Applications on AKS <span class="stars"><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span></span></h1>
+
+<h2>Create AKS Cluster</h2>
+<pre><code>az aks create \
+  --resource-group rg-containers-demo \
+  --name my-aks-cluster \
+  --node-count 3 \
+  --node-vm-size Standard_D4s_v3 \
+  --enable-managed-identity \
+  --attach-acr contosobankacr \
+  --network-plugin azure \
+  --enable-addons monitoring \
+  --workspace-resource-id &lt;law-id&gt; \
+  --kubernetes-version 1.29 \
+  --generate-ssh-keys
+
+az aks get-credentials \
+  --resource-group rg-containers-demo \
+  --name my-aks-cluster
+
+kubectl get nodes
+<span class="lang-label">bash</span></code></pre>
+
+<h2>Kubernetes Object Hierarchy</h2>
+<pre><code>Deployment → manages → ReplicaSet → manages → Pod → contains → Container(s)
+<span class="lang-label">diagram</span></code></pre>
+
+<h2>Deployment YAML</h2>
+<pre><code><span class="kw">apiVersion</span>: apps/v1
+<span class="kw">kind</span>: Deployment
+<span class="kw">metadata</span>:
+  name: api-deployment
+<span class="kw">spec</span>:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: api
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1           <span class="cm"># 1 extra pod during update</span>
+      maxUnavailable: 0     <span class="cm"># Never go below desired count</span>
+  template:
+    metadata:
+      labels:
+        app: api
+    spec:
+      containers:
+        - name: api
+          image: contosobankacr.azurecr.io/myapp/api:1.0.0
+          ports:
+            - containerPort: 8080
+          resources:
+            requests:
+              cpu: <span class="str">"250m"</span>      <span class="cm"># 0.25 vCPU</span>
+              memory: <span class="str">"256Mi"</span>
+            limits:
+              cpu: <span class="str">"500m"</span>
+              memory: <span class="str">"512Mi"</span>
+          readinessProbe:     <span class="cm"># Controls traffic routing</span>
+            httpGet:
+              path: /health/ready
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          livenessProbe:      <span class="cm"># Controls container restart</span>
+            httpGet:
+              path: /health/live
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+<span class="lang-label">yaml</span></code></pre>
+
+<h2>Service Types</h2>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Type</th><th>Accessible From</th><th>Use Case</th></tr></thead>
+<tbody>
+<tr><td><code>ClusterIP</code></td><td>Within cluster only</td><td>Internal microservice communication</td></tr>
+<tr><td><code>NodePort</code></td><td>Each node's IP + port</td><td>Dev/test direct access</td></tr>
+<tr><td><code>LoadBalancer</code></td><td>Public internet (Azure LB)</td><td>Expose service externally</td></tr>
+<tr><td><code>ExternalName</code></td><td>Maps to external DNS</td><td>Connect to external service by name</td></tr>
+</tbody>
+</table>
+</div>
+
+<pre><code><span class="cm"># Internal service</span>
+<span class="kw">apiVersion</span>: v1
+<span class="kw">kind</span>: Service
+<span class="kw">metadata</span>:
+  name: api-service
+<span class="kw">spec</span>:
+  type: ClusterIP
+  selector:
+    app: api         <span class="cm"># Selects pods with label app=api</span>
+  ports:
+    - port: 80
+      targetPort: 8080
+<span class="lang-label">yaml</span></code></pre>
+
+<h2>Health Probes</h2>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Probe</th><th>Failure Effect</th><th>Memory Hook</th></tr></thead>
+<tbody>
+<tr><td><strong>readinessProbe</strong></td><td>Pod removed from Service endpoints (NOT restarted)</td><td>"R = Routing"</td></tr>
+<tr><td><strong>livenessProbe</strong></td><td>Container restarted</td><td>"L = Life support"</td></tr>
+<tr><td><strong>startupProbe</strong></td><td>Delays liveness/readiness during slow starts</td><td>"S = Startup delay"</td></tr>
+</tbody>
+</table>
+</div>
+
+<h2>Rolling Update &amp; Rollback</h2>
+<pre><code><span class="cm"># Update to new image</span>
+kubectl set image deployment/api-deployment \
+  api=contosobankacr.azurecr.io/myapp/api:2.0.0
+
+<span class="cm"># Watch progress</span>
+kubectl rollout status deployment/api-deployment
+
+<span class="cm"># View history</span>
+kubectl rollout history deployment/api-deployment
+
+<span class="cm"># Rollback to previous version</span>
+kubectl rollout undo deployment/api-deployment
+
+<span class="cm"># Rollback to specific revision</span>
+kubectl rollout undo deployment/api-deployment --to-revision=3
+<span class="lang-label">bash</span></code></pre>
+
+<h2>ConfigMap &amp; Secret</h2>
+<pre><code><span class="cm"># Create ConfigMap</span>
+kubectl create configmap api-config \
+  --from-literal=ENVIRONMENT=production \
+  --from-literal=LOG_LEVEL=info
+
+<span class="cm"># Create Secret</span>
+kubectl create secret generic db-secret \
+  --from-literal=DB_PASSWORD=mypassword \
+  --from-literal=DB_USERNAME=admin
+
+<span class="cm"># Reference secret in deployment</span>
+<span class="kw">env</span>:
+  - name: DB_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: db-secret
+        key: DB_PASSWORD
+<span class="lang-label">bash</span></code></pre>
+
+<div class="callout warning">
+<div class="callout-title">&#9888; Secrets Are NOT Encrypted by Default</div>
+Kubernetes Secrets are only Base64-encoded in etcd. For real encryption, use Azure Key Vault with the Secrets Store CSI Driver. This is a common exam trap — Base64 ≠ encryption.
+</div>
+
+<h2>kubectl Quick Reference</h2>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Command</th><th>Purpose</th></tr></thead>
+<tbody>
+<tr><td><code>kubectl apply -f file.yaml</code></td><td>Create or update resources</td></tr>
+<tr><td><code>kubectl get pods -o wide</code></td><td>List pods with node and IP details</td></tr>
+<tr><td><code>kubectl describe pod &lt;name&gt;</code></td><td>Full details + Events section</td></tr>
+<tr><td><code>kubectl logs &lt;pod&gt; --previous</code></td><td>Logs from crashed container</td></tr>
+<tr><td><code>kubectl logs &lt;pod&gt; -f</code></td><td>Stream live logs</td></tr>
+<tr><td><code>kubectl exec -it &lt;pod&gt; -- /bin/sh</code></td><td>Shell into container</td></tr>
+<tr><td><code>kubectl get events --sort-by='.lastTimestamp'</code></td><td>Cluster events by time</td></tr>
+<tr><td><code>kubectl rollout undo deployment/&lt;name&gt;</code></td><td>Rollback deployment</td></tr>
+<tr><td><code>kubectl scale deployment/&lt;name&gt; --replicas=5</code></td><td>Manual scale</td></tr>
+<tr><td><code>kubectl top pods</code></td><td>CPU/memory usage per pod</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<!-- ═══════════════════════════════════ MODULE 9 ═══════════════════════════════════ -->
+<section id="m9">
+<h1>Module 9 — Monitor &amp; Troubleshoot <span class="stars"><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span></span></h1>
+
+<h2>Log Analytics Tables</h2>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Table</th><th>Service</th><th>Contains</th></tr></thead>
+<tbody>
+<tr><td><code>ContainerLogV2</code></td><td>AKS</td><td>Container stdout/stderr</td></tr>
+<tr><td><code>KubePodInventory</code></td><td>AKS</td><td>Pod state, restart counts</td></tr>
+<tr><td><code>ContainerAppConsoleLogs_CL</code></td><td>Container Apps</td><td>Application console output</td></tr>
+<tr><td><code>ContainerAppSystemLogs_CL</code></td><td>Container Apps</td><td>Platform/scaling events</td></tr>
+</tbody>
+</table>
+</div>
+
+<h2>KQL Queries</h2>
+<pre><code><span class="cm">// Container errors in last 1 hour (AKS)</span>
+ContainerLogV2
+| where TimeGenerated &gt; ago(1h)
+| where LogMessage contains <span class="str">"ERROR"</span>
+| project TimeGenerated, ContainerName, PodName, LogMessage
+| order by TimeGenerated desc
+
+<span class="cm">// Restarted containers</span>
+KubePodInventory
+| where TimeGenerated &gt; ago(1h)
+| where RestartCount &gt; 0
+| project PodName, ContainerName, RestartCount, Namespace
+| order by RestartCount desc
+
+<span class="cm">// Container Apps console logs</span>
+ContainerAppConsoleLogs_CL
+| where ContainerAppName_s == <span class="str">"api-service"</span>
+| project TimeGenerated, Log_s, RevisionName_s
+| order by TimeGenerated desc
+<span class="lang-label">kql</span></code></pre>
+
+<h2>Failure Mode Diagnosis</h2>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Status</th><th>Cause</th><th>First Command</th><th>Fix</th></tr></thead>
+<tbody>
+<tr><td><span class="badge-pill pill-red">CrashLoopBackOff</span></td><td>App crashes on startup</td><td><code>kubectl logs &lt;pod&gt; --previous</code></td><td>Fix application error</td></tr>
+<tr><td><span class="badge-pill pill-red">ImagePullBackOff</span></td><td>Cannot pull image</td><td><code>kubectl describe pod &lt;pod&gt;</code></td><td>Fix registry auth / image name</td></tr>
+<tr><td><span class="badge-pill pill-orange">Pending</span></td><td>No schedulable node</td><td><code>kubectl describe pod &lt;pod&gt;</code></td><td>Add nodes or reduce CPU request</td></tr>
+<tr><td><span class="badge-pill pill-red">OOMKilled (137)</span></td><td>Memory limit exceeded</td><td><code>kubectl describe pod &lt;pod&gt;</code></td><td>Increase memory limit</td></tr>
+<tr><td><span class="badge-pill pill-orange">Evicted</span></td><td>Node pressure</td><td><code>kubectl describe node</code></td><td>Add node resources</td></tr>
+</tbody>
+</table>
+</div>
+
+<h2>Troubleshooting Workflow</h2>
+<pre><code><span class="cm"># Step 1: Get pod status</span>
+kubectl get pods -o wide
+
+<span class="cm"># Step 2: Inspect events and state</span>
+kubectl describe pod &lt;pod-name&gt;
+
+<span class="cm"># Step 3: Check crash logs</span>
+kubectl logs &lt;pod-name&gt; --previous
+
+<span class="cm"># Step 4: Check cluster events</span>
+kubectl get events --sort-by=<span class="str">'.lastTimestamp'</span> -A
+
+<span class="cm"># Step 5: Interactive debug</span>
+kubectl exec -it &lt;pod-name&gt; -- /bin/sh
+
+<span class="cm"># Step 6: Test DNS from inside pod</span>
+kubectl run dns-test --image=busybox -it --rm -- \
+  nslookup &lt;service-name&gt;.default.svc.cluster.local
+<span class="lang-label">bash</span></code></pre>
+
+<pre><code><span class="cm"># Container Apps live logs</span>
+az containerapp logs show \
+  --name api-service \
+  --resource-group rg-containers-demo \
+  --follow
+<span class="lang-label">bash</span></code></pre>
+</section>
+
+<!-- ═══════════════════════════════════ FLASHCARDS ═══════════════════════════════════ -->
+<section id="flashcards">
+<h1>Flashcards</h1>
+<p>Click any card to reveal the answer. Test yourself before looking!</p>
+<div class="flashcard-grid" id="fcGrid"></div>
+</section>
+
+<!-- ═══════════════════════════════════ MCQ ═══════════════════════════════════ -->
+<section id="mcq">
+<h1>50-Question Practice Test</h1>
+<p>Click <strong>Reveal Answer</strong> after selecting your answer. Track your score below.</p>
+<div style="background:#e8f5e9;border-radius:8px;padding:12px 16px;margin-bottom:20px;font-size:14px;font-weight:600;color:#2e7d32">
+  Score: <span id="scoreCount">0</span> / <span id="scoreTotal">0</span> answered correctly
+</div>
+<div id="mcqContainer"></div>
+</section>
+
+<!-- ═══════════════════════════════════ CHEAT SHEET ═══════════════════════════════════ -->
+<section id="cheatsheet">
+<h1>Final Revision Cheat Sheet</h1>
+<div class="cheat-grid">
+<div class="cheat-card">
+<h4>ACR Commands</h4>
+<pre style="font-size:11px;padding:10px;margin:0"><code>CREATE:  az acr create --sku Premium
+BUILD:   az acr build --registry &lt;n&gt; --image img:tag .
+ATTACH:  az aks update --attach-acr &lt;n&gt;
+ROLES:   AcrPull | AcrPush | AcrDelete
+TIERS:   Basic / Standard / Premium</code></pre>
+</div>
+<div class="cheat-card">
+<h4>Container Apps</h4>
+<pre style="font-size:11px;padding:10px;margin:0"><code>ENV:     az containerapp env create
+DEPLOY:  az containerapp create --ingress external
+SCALE0:  --min-replicas 0
+SECRETS: secretref:&lt;key-name&gt;
+TRAFFIC: --revision-weight r1=80 r2=20</code></pre>
+</div>
+<div class="cheat-card">
+<h4>AKS kubectl</h4>
+<pre style="font-size:11px;padding:10px;margin:0"><code>DEPLOY:  kubectl apply -f file.yaml
+UPDATE:  kubectl set image deployment/&lt;d&gt; c=img
+ROLLBACK: kubectl rollout undo deployment/&lt;d&gt;
+SCALE:   kubectl scale deployment/&lt;d&gt; --replicas=5
+DEBUG:   kubectl describe pod | logs --previous</code></pre>
+</div>
+<div class="cheat-card">
+<h4>KEDA Rules</h4>
+<pre style="font-size:11px;padding:10px;margin:0"><code>ZERO:   minReplicaCount: 0
+NO-ZERO: cpu / memory scalers
+AUTH:   TriggerAuthentication
+MSG/POD: messageCount (SB) | queueLength (Queue)
+POLL:   pollingInterval (seconds)</code></pre>
+</div>
+<div class="cheat-card">
+<h4>Health Probes</h4>
+<pre style="font-size:11px;padding:10px;margin:0"><code>readinessProbe → removes from Service (no restart)
+livenessProbe  → restarts container
+startupProbe   → delays others on slow start
+
+R = Routing  |  L = Life support</code></pre>
+</div>
+<div class="cheat-card">
+<h4>Failure Modes</h4>
+<pre style="font-size:11px;padding:10px;margin:0"><code>CrashLoopBackOff → logs --previous
+ImagePullBackOff → fix auth/name
+Pending          → add nodes / reduce CPU req
+OOMKilled (137)  → increase memory limit
+Evicted          → add node resources</code></pre>
+</div>
+<div class="cheat-card">
+<h4>ACR Premium Features</h4>
+<pre style="font-size:11px;padding:10px;margin:0"><code>✓ Geo-replication
+✓ Private Link (+ DNS zone required)
+✓ Content Trust (image signing)
+✓ Zone Redundancy
+✓ Customer-managed keys
+✗ Basic / Standard do NOT have these</code></pre>
+</div>
+<div class="cheat-card">
+<h4>Exam Decision Shortcuts</h4>
+<pre style="font-size:11px;padding:10px;margin:0"><code>"No K8s expertise"  → Container Apps
+"Scale to zero"     → Container Apps
+"GPU workloads"     → AKS
+"Existing manifests"→ AKS
+"Simplest run"      → ACI
+"No credentials"    → Managed Identity
+"Geo-replication"   → ACR Premium</code></pre>
+</div>
+</div>
+</section>
+
+<!-- ═══════════════════════════════════ GLOSSARY ═══════════════════════════════════ -->
+<section id="glossary">
+<h1>Full Glossary</h1>
+<div id="glossaryContainer"></div>
+</section>
+
+<!-- ═══════════════════════════════════ LAST MINUTE ═══════════════════════════════════ -->
+<section id="lastminute">
+<h1>Last-Minute Exam Tips &amp; One Day Before Guide</h1>
+
+<h2>10 Last-Minute Tips</h2>
+<ol>
+<li><strong>Read every question twice.</strong> Container hosting questions hinge on specific requirements — "scale to zero," "GPU," "existing manifests."</li>
+<li><strong>ACR tier = Premium for enterprise features.</strong> Any question mentioning geo-replication, Private Link, Content Trust → Premium.</li>
+<li><strong>Managed Identity beats credentials.</strong> For AKS, App Service, Container Apps connecting to ACR → Managed Identity is the answer.</li>
+<li><strong><code>AcrPull</code> ≠ <code>Reader</code>.</strong> This trap appears every exam. Reader cannot pull images.</li>
+<li><strong>readiness ≠ liveness.</strong> readiness = traffic routing, liveness = container restarts.</li>
+<li><strong>Scale to zero = <code>minReplicaCount: 0</code></strong> AND must use an event trigger (not CPU/Memory).</li>
+<li><strong>Revisions are immutable.</strong> Updating a Container App creates a NEW revision. Old ones persist until deactivated.</li>
+<li><strong>Traffic weights must sum to 100%.</strong></li>
+<li><strong>Kubernetes Secrets = Base64, NOT encrypted.</strong> For encryption → Key Vault CSI Driver.</li>
+<li><strong><code>kubectl describe pod</code> is ALWAYS the first troubleshooting step.</strong></li>
+</ol>
+
+<h2>One Day Before — Revision Schedule</h2>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Time</th><th>Activity</th><th>Focus</th></tr></thead>
+<tbody>
+<tr><td>Morning (2h)</td><td>Quick Revision summaries</td><td>All 9 modules, key rules only</td></tr>
+<tr><td>Midday (1h)</td><td>Practice test review</td><td>50 MCQs — mark wrong answers, re-read sections</td></tr>
+<tr><td>Afternoon (45min)</td><td>Cheat Sheet + Flashcards</td><td>Self-quiz on flashcards</td></tr>
+<tr><td>Evening (30min)</td><td>Personal weak areas</td><td>Whatever you got wrong in practice test</td></tr>
+<tr><td>Night before</td><td>Stop studying</td><td>Sleep. Brain consolidates memory during sleep.</td></tr>
+<tr><td>Exam morning</td><td>Skim cheat sheet</td><td>Don't learn anything new. Trust your preparation.</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="callout tip">
+<div class="callout-title">&#128161; Exam Day Mindset</div>
+When reading a question, <strong>identify the key constraint first</strong>, then match it to the service. When two answers seem right, choose the simpler, more managed option. Azure exams always favor managed services over self-managed complexity.
+</div>
+</section>
+
+</div><!-- /content -->
+</div><!-- /main -->
+
+<script>
+// ─── FLASHCARD DATA ───
+const flashcards = [
+  {q:"Containers vs VMs — key difference?", a:"Containers share host OS kernel. VMs have a separate full OS per machine."},
+  {q:"Which ACR tier supports geo-replication?", a:"Premium (Basic and Standard do NOT support geo-replication)"},
+  {q:"Does the Reader role allow image pulls from ACR?", a:"NO. Reader is metadata only. You need AcrPull for image pulls."},
+  {q:"AKS + ACR one-command integration?", a:"az aks update --name &lt;aks&gt; --resource-group &lt;rg&gt; --attach-acr &lt;acr&gt;"},
+  {q:"Are image tags mutable or immutable?", a:"Tags are MUTABLE. Digests (SHA256) are IMMUTABLE."},
+  {q:"What does az acr build do?", a:"Builds and pushes a container image in the cloud — no local Docker required. This is an ACR Quick Task."},
+  {q:"Internal URL format in Container Apps?", a:"http://&lt;app-name&gt; — just the app name, within the same environment."},
+  {q:"Traffic split weights rule?", a:"Weights MUST sum to exactly 100%. Both revisions must be Active."},
+  {q:"How to enable scale to zero in Container Apps?", a:"--min-replicas 0 (and use an event trigger, NOT CPU/Memory)"},
+  {q:"Can CPU scalers scale to zero in KEDA?", a:"NO. CPU and Memory scalers cannot scale to zero. Event-based triggers can."},
+  {q:"Which probe controls traffic routing to a pod?", a:"readinessProbe (failure removes pod from Service endpoints, does NOT restart it)"},
+  {q:"Which probe causes container restart?", a:"livenessProbe (failure triggers container restart)"},
+  {q:"Pod exit code 137 means?", a:"OOMKilled — container exceeded its memory limit. Fix: increase resources.limits.memory"},
+  {q:"How are Kubernetes Secrets stored by default?", a:"Base64-encoded in etcd. NOT encrypted. For encryption use Key Vault CSI Driver."},
+  {q:"What property enables MI-based ACR pull in App Service?", a:"acrUseManagedIdentityCreds=true (must be explicitly set)"},
+  {q:"App Service container port setting?", a:"WEBSITES_PORT — sets the port your container listens on"},
+  {q:"Deployment slots minimum App Service Plan tier?", a:"Standard (slots are not available on Free, Shared, or Basic)"},
+  {q:"KEDA TriggerAuthentication purpose?", a:"Stores credentials (from a K8s Secret) that KEDA uses to authenticate to the event source"},
+  {q:"ACR Private Link DNS requirement?", a:"Must configure private DNS zone: privatelink.azurecr.io linked to your VNet"},
+  {q:"Container Apps revision modes?", a:"Single: one revision active at a time. Multiple: multiple revisions active simultaneously (required for traffic splitting)"},
+  {q:"AKS GPU support?", a:"Yes — AKS supports GPU node pools. Container Apps does NOT support GPU."},
+  {q:"Dapr service invocation URL pattern?", a:"http://localhost:3500/v1.0/invoke/&lt;app-id&gt;/method/&lt;path&gt;"},
+  {q:"What does kubectl rollout undo do?", a:"Rolls back a Deployment to its previous ReplicaSet (previous image/config)"},
+  {q:"AKS vs Container Apps — which supports Windows containers?", a:"AKS supports Windows containers. Container Apps is Linux-only."},
+  {q:"Which Log Analytics table stores AKS container logs?", a:"ContainerLogV2 (Container Apps use ContainerAppConsoleLogs_CL)"},
+];
+
+const fcGrid = document.getElementById('fcGrid');
+flashcards.forEach(fc => {
+  const div = document.createElement('div');
+  div.className = 'flashcard';
+  div.innerHTML = `<div class="front">${fc.q}</div><div class="back">${fc.a}</div>`;
+  div.querySelector('.back').style.display = 'none';
+  div.addEventListener('click', () => {
+    const back = div.querySelector('.back');
+    back.style.display = back.style.display === 'none' ? 'block' : 'none';
+  });
+  fcGrid.appendChild(div);
+});
+
+// ─── MCQ DATA ───
+const questions = [
+  {q:"Which Azure service provides the SIMPLEST way to run a single container for a short-lived batch job?",opts:["Azure Kubernetes Service","Azure Container Instances","Azure Container Apps","Azure App Service"],ans:1,exp:"ACI is serverless, fast, billed per second — ideal for short-lived workloads."},
+  {q:"Which ACR tier supports geo-replication?",opts:["Basic","Standard","Premium","All tiers"],ans:2,exp:"Geo-replication is a Premium-only feature."},
+  {q:"A developer assigns the Reader role on an ACR to a service account. The account fails to pull images. What is the correct role?",opts:["Contributor","AcrPush","AcrPull","Owner"],ans:2,exp:"Reader cannot pull images. AcrPull is the correct role."},
+  {q:"Which property must be set on an App Service to use Managed Identity when pulling from ACR?",opts:["acrUseManagedIdentityCreds=true","DOCKER_REGISTRY_SERVER_USER=managed","identityEnabled=true","WEBSITES_AUTH_ENABLED=true"],ans:0,exp:"acrUseManagedIdentityCreds=true must be explicitly set to enable MI-based ACR pulls."},
+  {q:"A container image tag has been updated to point to a newer image. What property of tags does this illustrate?",opts:["Tags are immutable","Tags are encrypted","Tags are mutable","Tags are region-specific"],ans:2,exp:"Tags are mutable — they can be reassigned to different images. Digests are immutable."},
+  {q:"Which kubectl command shows logs from a container that has already crashed?",opts:["kubectl logs <pod>","kubectl logs <pod> --previous","kubectl describe pod <pod>","kubectl get events"],ans:1,exp:"--previous retrieves logs from the last terminated container instance."},
+  {q:"KEDA scales a deployment to zero replicas. What value enables this?",opts:["maxReplicaCount: 0","minReplicaCount: 0","desiredReplicas: 0","scaleToZero: true"],ans:1,exp:"minReplicaCount: 0 allows scale-to-zero."},
+  {q:"A pod is in OOMKilled state with exit code 137. What should be done?",opts:["Increase CPU limit","Increase memory limit","Restart the node","Decrease replicas"],ans:1,exp:"OOMKilled means the container exceeded its memory limit. Increase resources.limits.memory."},
+  {q:"An AKS pod is Pending. kubectl describe shows 'Insufficient cpu'. What is the BEST fix?",opts:["Restart the pod","Reduce CPU request or add nodes","Increase memory limit","Delete the namespace"],ans:1,exp:"Pending due to insufficient CPU: reduce the pod's CPU request or scale out the node pool."},
+  {q:"Which Kubernetes probe controls whether a pod receives traffic from a Service?",opts:["livenessProbe","startupProbe","readinessProbe","healthProbe"],ans:2,exp:"readinessProbe controls Service endpoint membership (traffic routing)."},
+  {q:"A team wants Container Apps to send 5% of traffic to a new revision and 95% to the current one. What must be true?",opts:["Ingress must be internal","Single revision mode must be enabled","Multiple revision mode must be enabled","Traffic splitting is not supported"],ans:2,exp:"Traffic splitting requires Multiple revision mode. Both revisions must be Active."},
+  {q:"Which ACR feature prevents images without valid cryptographic signatures from being pulled?",opts:["Vulnerability Scanning","Content Trust","Private Link","Retention Policy"],ans:1,exp:"Content Trust enforces image signing and verification (Premium tier)."},
+  {q:"What does 'az acr build --registry myacr --image myapp:1.0 .' do?",opts:["Builds locally and pushes","Builds in the cloud without local Docker and pushes to ACR","Downloads from Docker Hub","Creates a scheduled task"],ans:1,exp:"az acr build is an ACR Quick Task: cloud build, no local Docker required."},
+  {q:"Which Kubernetes Service type creates an Azure Load Balancer with a public IP?",opts:["ClusterIP","NodePort","ExternalName","LoadBalancer"],ans:3,exp:"LoadBalancer type provisions an Azure external Load Balancer."},
+  {q:"An ACR base image update trigger is configured. The base image is in a third-party private registry. Will the trigger fire?",opts:["Yes, for any registry","No, requires same ACR or MCR","Yes, if auth is configured","No, only for Linux images"],ans:1,exp:"Base image triggers work for images in the same ACR or MCR only."},
+  {q:"Which Container Apps ingress type makes an app accessible only from within the same environment?",opts:["external","none","internal","private"],ans:2,exp:"internal ingress restricts access to within the same Container Apps environment."},
+  {q:"A Kubernetes Secret contains a password. How is it stored by default?",opts:["AES-256 encrypted","Plaintext","Base64-encoded","SHA256-hashed"],ans:2,exp:"Secrets are Base64-encoded by default in etcd — NOT encrypted."},
+  {q:"Which KEDA trigger scaler CANNOT scale a deployment to zero?",opts:["azure-servicebus","azure-queue","cpu","http"],ans:2,exp:"CPU scalers need a running pod to measure CPU — they cannot scale to zero."},
+  {q:"What is the internal DNS name for a Container App called 'order-service' within the same environment?",opts:["order-service.azurecontainerapps.io","http://order-service","order-service.svc.cluster.local","order-service.internal.azure.com"],ans:1,exp:"Container Apps use http://<app-name> for internal communication within the same environment."},
+  {q:"A Deployment with maxUnavailable: 0 and maxSurge: 1 has 5 replicas. How many pods run at peak during update?",opts:["4","5","6","10"],ans:2,exp:"5 existing + 1 surge = 6 pods temporarily during the rolling update."},
+  {q:"Which command grants AKS permission to pull from ACR using Managed Identity in one step?",opts:["az acr update --enable-aks","az aks update --attach-acr <acr>","az role assignment create --role AcrPull","az aks create --acr-integration"],ans:1,exp:"az aks update --attach-acr is the single-command shortcut."},
+  {q:"Azure Container Apps revisions are best described as:",opts:["Mutable updates to running containers","Immutable snapshots of app configuration","Environment variable sets","Copies of the container image"],ans:1,exp:"Revisions are immutable configuration snapshots created on each app update."},
+  {q:"Container Insights stores AKS container logs in which Log Analytics table?",opts:["AzureDiagnostics","KubeEvents","ContainerLogV2","ContainerAppConsoleLogs_CL"],ans:2,exp:"AKS container logs go to ContainerLogV2. Container Apps use ContainerAppConsoleLogs_CL."},
+  {q:"Which Dapr building block enables Container Apps to call other services by name with automatic retries?",opts:["State management","Pub/Sub","Service invocation","Bindings"],ans:2,exp:"Dapr service invocation enables named service calls with built-in retries and tracing."},
+  {q:"A Container App needs to store a connection string securely as an environment variable. What syntax is used?",opts:["ENV_VAR=$(secret-name)","ENV_VAR=@Microsoft.KeyVault(SecretUri=...)","ENV_VAR=secretref:secret-name","ENV_VAR={{secret.secret-name}}"],ans:2,exp:"secretref:<name> references a Container App secret in an environment variable."},
+  {q:"Which ACR feature automatically removes untagged image manifests after a set number of days?",opts:["Content Trust","Geo-replication","Vulnerability Scanning","Retention Policy"],ans:3,exp:"Retention policies delete untagged manifests on a schedule."},
+  {q:"An AKS pod's livenessProbe is failing. What does Kubernetes do?",opts:["Removes pod from Service endpoints","Marks pod as Pending","Restarts the container","Deletes and replaces the pod"],ans:2,exp:"livenessProbe failure triggers a container restart (not pod replacement)."},
+  {q:"Which Container Apps scaling parameter controls messages per replica for Service Bus?",opts:["queueLength","messageCount","partitionCount","triggerThreshold"],ans:1,exp:"messageCount specifies messages per replica for the azure-servicebus scaler."},
+  {q:"A team needs Private Link for their container registry. Which ACR tier is required?",opts:["Basic","Standard","Premium","Any with VNet"],ans:2,exp:"Private Link requires Premium ACR."},
+  {q:"What is the effect of 'kubectl rollout undo deployment/api-deployment'?",opts:["Deletes the deployment","Restores the previous image/configuration","Scales to zero","Restarts all pods"],ans:1,exp:"rollout undo promotes the previous ReplicaSet, restoring the prior image and config."},
+  {q:"When do new nodes get added in an AKS cluster with autoscaling enabled?",opts:["When any pod is created","When pods are Pending due to insufficient resources","When CPU exceeds 80%","On a schedule"],ans:1,exp:"AKS cluster autoscaler adds nodes when pods cannot be scheduled due to resource constraints."},
+  {q:"Which App Service setting specifies what port the container is listening on?",opts:["DOCKER_PORT","CONTAINER_PORT","WEBSITES_PORT","HTTP_PLATFORM_PORT"],ans:2,exp:"WEBSITES_PORT tells App Service which port the container listens on."},
+  {q:"What is the purpose of the KEDA TriggerAuthentication object?",opts:["Defines which pods KEDA can scale","Stores credentials KEDA uses to auth to event sources","Defines K8s RBAC for KEDA","Configures TLS for KEDA"],ans:1,exp:"TriggerAuthentication holds credentials (from K8s Secrets) KEDA uses to poll event sources."},
+  {q:"A Container App has --min-replicas 1. What happens when there is no traffic?",opts:["App scales to zero","One replica remains running","App is paused","New revision is created"],ans:1,exp:"With min-replicas 1, at least one instance always runs. Zero requires min-replicas 0."},
+  {q:"Which kubectl command executes a shell inside a running container?",opts:["kubectl run","kubectl debug","kubectl exec -it <pod> -- /bin/sh","kubectl attach <pod>"],ans:2,exp:"kubectl exec -it <pod> -- /bin/sh opens an interactive shell in the container."},
+  {q:"Contoso needs images replicated to three regions with automatic sync. Which approach is correct?",opts:["Push to each regional ACR separately","Geo-replication on Premium ACR — push once","Use Azure CDN","Use Azure Front Door"],ans:1,exp:"Geo-replication on Premium ACR: push once, ACR replicates to all regions automatically."},
+  {q:"A K8s Deployment selector uses 'app: api'. A developer updates a pod's label to 'app: api-v2'. What happens?",opts:["Service auto-updates selector","Service stops routing traffic to those pods","Pods are restarted","Deployment is deleted"],ans:1,exp:"The Service selector no longer matches the relabeled pods. Traffic stops flowing to them."},
+  {q:"Which AKS networking option provides each pod with a VNet IP address from the subnet?",opts:["kubenet","Azure CNI","Calico","Flannel"],ans:1,exp:"Azure CNI assigns VNet IP addresses directly to pods. Kubenet uses an overlay with NAT."},
+  {q:"For deployment slot swap availability, the App Service Plan tier must be at minimum:",opts:["Free","Basic","Standard","Premium"],ans:2,exp:"Deployment slots require Standard tier or above."},
+  {q:"Which table in Log Analytics contains Container Apps system events such as scaling decisions?",opts:["ContainerLogV2","ContainerAppConsoleLogs_CL","ContainerAppSystemLogs_CL","KubeEvents"],ans:2,exp:"ContainerAppSystemLogs_CL contains system/platform events for Container Apps."},
+  {q:"A pod has resources.requests.cpu: '500m'. What does 500m mean?",opts:["500 MB of CPU","500 megahertz","0.5 vCPU cores","50% of all CPUs"],ans:2,exp:"Kubernetes CPU notation: 1000m = 1 core, so 500m = 0.5 vCPU."},
+  {q:"An ACR task YAML has when: [build-step] on the push step. The build step fails. What happens?",opts:["Push runs anyway","Push is skipped","Push waits indefinitely","Push creates error manifest"],ans:1,exp:"If a dependency step fails, dependent steps are skipped."},
+  {q:"Which Container Apps component provides shared VNet, Log Analytics, and internal DNS for all apps?",opts:["Container App","Revision","Environment","Ingress controller"],ans:2,exp:"The Environment is the shared boundary providing VNet, logging, and internal DNS."},
+  {q:"A developer wants to pull a specific immutable image version regardless of tag reassignment. What to use?",opts:["Repository name","Image digest","ACR login server URL","Image manifest ID"],ans:1,exp:"Digests (SHA256) are immutable and always reference the exact same image."},
+  {q:"Which statement about Azure Container Apps and Kubernetes is TRUE?",opts:["Container Apps uses VMs, not K8s","Container Apps exposes K8s APIs","Container Apps is built on K8s but abstracts it away","Container Apps only supports Windows"],ans:2,exp:"Container Apps runs on Kubernetes internally but hides all K8s APIs from the user."},
+  {q:"A KEDA cron scaler has start: '0 8 * * 1-5' and desiredReplicas: '10'. What does this do?",opts:["Scale to 10 at 8 PM weekdays","Scale to 10 at 8 AM weekdays","Scale by 10% every 8 minutes","Run 10 jobs per weekday"],ans:1,exp:"Cron 0 8 * * 1-5 = 8:00 AM Monday through Friday."},
+  {q:"Which AKS add-on enables the Azure Portal to show CPU/memory graphs for individual containers?",opts:["kube-dashboard","monitoring (Container Insights)","azure-policy","open-service-mesh"],ans:1,exp:"The monitoring add-on installs Container Insights (OMS Agent), enabling per-container metrics."},
+  {q:"What type of Kubernetes Secret holds Docker registry credentials for imagePullSecrets?",opts:["Opaque","kubernetes.io/tls","kubernetes.io/dockerconfigjson","kubernetes.io/service-account-token"],ans:2,exp:"kubernetes.io/dockerconfigjson holds Docker registry credentials used as imagePullSecrets."},
+  {q:"Which Container Apps property ensures HTTPS is auto-provisioned for an externally accessible app?",opts:["Manually configure TLS certificate","Ingress type external — TLS is automatic","Set tlsEnabled: true","Attach an Azure Key Vault certificate"],ans:1,exp:"External ingress in Container Apps automatically provisions and manages HTTPS/TLS certificates."},
+  {q:"A company requires all traffic between AKS pods and ACR to stay within Microsoft's network. Which TWO features are needed?",opts:["ACR geo-replication","ACR Private Link","VNet-integrated AKS with Azure CNI","ACR Content Trust"],ans:1,exp:"Private Link gives ACR a private VNet IP; Azure CNI puts pods in the VNet. Together they keep ACR traffic inside Microsoft's network. (Select B and C)"},
+];
+
+let score = 0, answered = 0;
+const container = document.getElementById('mcqContainer');
+const scoreCount = document.getElementById('scoreCount');
+const scoreTotal = document.getElementById('scoreTotal');
+
+questions.forEach((q, i) => {
+  const div = document.createElement('div');
+  div.className = 'mcq';
+  const optHTML = q.opts.map((o, j) => `<li data-idx="${j}" data-q="${i}">${String.fromCharCode(65+j)}. ${o}</li>`).join('');
+  div.innerHTML = `
+    <div class="question">Q${i+1}. ${q.q}</div>
+    <ul class="options">${optHTML}</ul>
+    <button class="reveal-btn" data-q="${i}">Reveal Answer</button>
+    <div class="answer-box" id="ans${i}"><strong>Answer: ${String.fromCharCode(65+q.ans)} — ${q.opts[q.ans]}</strong><br><br>${q.exp}</div>`;
+  container.appendChild(div);
+});
+
+document.getElementById('mcqContainer').addEventListener('click', e => {
+  if (e.target.tagName === 'LI') {
+    const qIdx = parseInt(e.target.dataset.q);
+    const oIdx = parseInt(e.target.dataset.idx);
+    const ul = e.target.parentElement;
+    if (ul.dataset.done) return;
+    ul.dataset.done = '1';
+    answered++;
+    if (oIdx === questions[qIdx].ans) {
+      e.target.classList.add('correct');
+      score++;
+    } else {
+      e.target.style.background='#fee2e2'; e.target.style.borderColor='#dc2626';
+      ul.children[questions[qIdx].ans].classList.add('correct');
+    }
+    scoreCount.textContent = score;
+    scoreTotal.textContent = answered;
+    document.getElementById(`ans${qIdx}`).classList.add('show');
+  }
+  if (e.target.classList.contains('reveal-btn')) {
+    const qIdx = parseInt(e.target.dataset.q);
+    document.getElementById(`ans${qIdx}`).classList.add('show');
+  }
+});
+
+// ─── GLOSSARY DATA ───
+const glossary = [
+  ["ACR","Azure Container Registry — managed private Docker registry"],
+  ["ACI","Azure Container Instances — serverless container execution"],
+  ["ACA","Azure Container Apps — serverless microservice platform"],
+  ["AKS","Azure Kubernetes Service — managed Kubernetes offering"],
+  ["Base image","The starting FROM image in a Dockerfile"],
+  ["ClusterIP","Kubernetes Service type: internal-only access"],
+  ["ConfigMap","Kubernetes object storing non-sensitive configuration as key-value pairs"],
+  ["Container","A running instance of a container image"],
+  ["Content Trust","ACR Premium feature for cryptographic image signing (Notary v2)"],
+  ["CrashLoopBackOff","Pod status: container repeatedly crashes and restarts with backoff"],
+  ["Dapr","Distributed Application Runtime: microservice building blocks sidecar"],
+  ["Deployment","Kubernetes object managing ReplicaSets for stateless applications"],
+  ["Digest","Immutable SHA256 hash uniquely identifying a specific container image"],
+  ["etcd","Distributed key-value store: Kubernetes cluster state database"],
+  ["Geo-replication","ACR Premium feature: copy registry to multiple Azure regions"],
+  ["HPA","Horizontal Pod Autoscaler: Kubernetes native CPU/memory autoscaler"],
+  ["Image","Read-only blueprint/template for creating containers"],
+  ["ImagePullBackOff","Pod status: repeated failure pulling a container image from registry"],
+  ["Ingress","Kubernetes HTTP routing resource (path and host-based routing)"],
+  ["KEDA","Kubernetes Event-Driven Autoscaler: scales pods on external events"],
+  ["kubelet","Agent on each Kubernetes node managing pod lifecycle"],
+  ["kubectl","CLI tool for interacting with Kubernetes clusters"],
+  ["Layer","Filesystem layer created by each instruction in a Dockerfile"],
+  ["livenessProbe","K8s health check: failure triggers container restart"],
+  ["LoadBalancer","K8s Service type: creates cloud load balancer with public IP"],
+  ["Managed Identity","Azure AD identity for Azure resources — no credentials needed"],
+  ["Manifest","Kubernetes YAML/JSON resource definition file"],
+  ["maxSurge","Rolling update: number of extra pods allowed during update"],
+  ["maxUnavailable","Rolling update: pods allowed to be unavailable during update"],
+  ["Namespace","Kubernetes isolation boundary for grouping resources"],
+  ["Node","A VM in a Kubernetes cluster that runs pods"],
+  ["Node Pool","A group of identically configured nodes in AKS"],
+  ["OOMKilled","Pod termination due to exceeding memory limit (exit code 137)"],
+  ["PVC","PersistentVolumeClaim: a request for storage by a pod"],
+  ["Pod","Smallest Kubernetes deployable unit: one or more containers"],
+  ["Private Link","Azure networking: private IP for PaaS services within a VNet"],
+  ["readinessProbe","K8s health check: failure removes pod from Service endpoints"],
+  ["Registry","Storage service for container images (like a library for images)"],
+  ["ReplicaSet","Kubernetes object ensuring N identical pods are running at all times"],
+  ["Repository","Collection of related images with same name but different tags"],
+  ["Revision","Immutable Container Apps configuration snapshot created on each update"],
+  ["Rolling Update","Deploy strategy: replace pods gradually to avoid downtime"],
+  ["ScaledObject","KEDA CRD defining scaling rules for a Kubernetes Deployment"],
+  ["Secret","Kubernetes object storing sensitive data (Base64-encoded only by default)"],
+  ["Service","Kubernetes object providing stable IP/DNS for accessing pods"],
+  ["Tag","Mutable label pointing to a specific container image version"],
+  ["TriggerAuthentication","KEDA CRD: credentials KEDA uses to poll event sources"],
+  ["VNet","Azure Virtual Network: isolated network environment"],
+];
+
+const gc = document.getElementById('glossaryContainer');
+const table = document.createElement('div'); table.className = 'table-wrap';
+const t = document.createElement('table');
+t.innerHTML = '<thead><tr><th>Term</th><th>Definition</th></tr></thead>';
+const tb = document.createElement('tbody');
+glossary.forEach(([term, def]) => {
+  const tr = document.createElement('tr');
+  tr.innerHTML = `<td><code>${term}</code></td><td>${def}</td>`;
+  tb.appendChild(tr);
+});
+t.appendChild(tb); table.appendChild(t); gc.appendChild(table);
+
+// ─── SIDEBAR ACTIVE LINK ───
+const sections = document.querySelectorAll('section[id]');
+const navLinks = document.querySelectorAll('#sidebar nav a');
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      navLinks.forEach(l => l.classList.remove('active'));
+      const link = document.querySelector(`#sidebar a[href="#${e.target.id}"]`);
+      if (link) link.classList.add('active');
+    }
+  });
+}, {threshold: 0.3});
+sections.forEach(s => observer.observe(s));
+
+// ─── PROGRESS BAR ───
+window.addEventListener('scroll', () => {
+  const scrolled = window.scrollY;
+  const total = document.documentElement.scrollHeight - window.innerHeight;
+  document.getElementById('progressFill').style.width = (scrolled/total*100)+'%';
+});
+</script>
+</body>
+</html>
