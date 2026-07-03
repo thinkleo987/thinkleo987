@@ -1,0 +1,1703 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI-200: Azure Data Management Services for AI</title>
+<style>
+:root{
+  --azure-blue:#0078d4;--azure-dark:#003966;--azure-light:#e6f2fb;
+  --accent-green:#7fba00;--accent-yellow:#ffb900;--accent-orange:#f25022;
+  --text-primary:#1a1a2e;--text-secondary:#444;
+  --bg-main:#f8f9fa;--bg-card:#fff;--border:#d0d7de;
+  --code-bg:#0d1117;--code-text:#e6edf3;--sidebar-w:280px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg-main);color:var(--text-primary);line-height:1.7}
+a{color:var(--azure-blue);text-decoration:none}
+a:hover{text-decoration:underline}
+#sidebar{position:fixed;top:0;left:0;width:var(--sidebar-w);height:100vh;background:var(--azure-dark);color:#fff;overflow-y:auto;z-index:100;padding-bottom:40px}
+#sidebar-header{padding:20px 16px;background:#002244;border-bottom:2px solid var(--azure-blue)}
+#sidebar-header h2{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#7ec8e3;margin-bottom:4px}
+#sidebar-header p{font-size:11px;color:#9ab;margin:0}
+#sidebar nav ul{list-style:none;padding:8px 0}
+#sidebar nav ul li a{display:block;padding:9px 20px;font-size:12.5px;color:#c8d8e8;border-left:3px solid transparent;transition:all .2s}
+#sidebar nav ul li a:hover,#sidebar nav ul li a.active{background:rgba(0,120,212,.25);border-left-color:var(--azure-blue);color:#fff;text-decoration:none}
+#sidebar nav ul li.section-title{padding:14px 20px 4px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:#5a7fa0}
+#main{margin-left:var(--sidebar-w);min-height:100vh}
+#hero{background:linear-gradient(135deg,#003966 0%,#0078d4 55%,#00bcf2 100%);color:#fff;padding:60px 48px 50px;position:relative;overflow:hidden}
+#hero::after{content:'';position:absolute;right:-60px;top:-60px;width:320px;height:320px;border-radius:50%;background:rgba(255,255,255,.05)}
+#hero .badge{display:inline-block;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);border-radius:20px;padding:4px 14px;font-size:12px;font-weight:600;letter-spacing:.5px;margin-bottom:16px}
+#hero h1{font-size:32px;font-weight:800;line-height:1.2;margin-bottom:10px;max-width:740px}
+#hero p{font-size:16px;opacity:.85;max-width:600px}
+.hero-meta{display:flex;gap:24px;margin-top:24px;flex-wrap:wrap}
+.hero-meta span{background:rgba(255,255,255,.12);border-radius:8px;padding:8px 16px;font-size:13px;font-weight:500}
+#topbar{background:#fff;border-bottom:1px solid var(--border);padding:10px 48px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:90;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+#topbar .breadcrumb{font-size:13px;color:#6b7280}
+.progress-bar-wrap{width:200px;height:6px;background:#e5e7eb;border-radius:3px;overflow:hidden}
+.progress-bar-fill{height:100%;width:0%;background:var(--azure-blue);border-radius:3px;transition:width .4s}
+#content{padding:40px 48px;max-width:1100px}
+section{margin-bottom:64px;scroll-margin-top:20px}
+h1{font-size:28px;font-weight:800;color:var(--azure-dark);border-bottom:3px solid var(--azure-blue);padding-bottom:10px;margin-bottom:24px}
+h2{font-size:21px;font-weight:700;color:var(--azure-dark);margin:32px 0 14px;padding-left:14px;border-left:4px solid var(--azure-blue)}
+h3{font-size:16px;font-weight:700;color:var(--azure-blue);margin:20px 0 10px}
+h4{font-size:14px;font-weight:700;color:var(--text-primary);margin:16px 0 8px}
+p{margin-bottom:12px;color:var(--text-secondary)}
+ul,ol{margin:10px 0 14px 24px;color:var(--text-secondary)}
+li{margin-bottom:5px}
+.stars{display:inline-flex;gap:2px;margin-left:8px}
+.star{color:#ffb900;font-size:14px}
+.star.off{color:#ccc}
+.callout{border-radius:10px;padding:16px 20px;margin:20px 0;border-left:4px solid}
+.callout.must-know{background:#fff8e1;border-color:#ffb900}
+.callout.must-know .ct{color:#e65100;font-weight:700;font-size:13px;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.callout.warning{background:#fff3f3;border-color:#d32f2f}
+.callout.warning .ct{color:#d32f2f;font-weight:700;font-size:13px;text-transform:uppercase;margin-bottom:8px}
+.callout.tip{background:#e8f5e9;border-color:#388e3c}
+.callout.tip .ct{color:#2e7d32;font-weight:700;font-size:13px;text-transform:uppercase;margin-bottom:8px}
+.callout.info{background:var(--azure-light);border-color:var(--azure-blue)}
+.callout.info .ct{color:var(--azure-dark);font-weight:700;font-size:13px;text-transform:uppercase;margin-bottom:8px}
+.table-wrap{overflow-x:auto;margin:16px 0 24px;border-radius:8px;border:1px solid var(--border);box-shadow:0 1px 4px rgba(0,0,0,.06)}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+thead{background:var(--azure-dark);color:#fff}
+thead th{padding:11px 14px;text-align:left;font-weight:600;letter-spacing:.3px}
+tbody tr:nth-child(even){background:#f6f9fc}
+tbody tr:hover{background:#e8f2fb}
+tbody td{padding:10px 14px;border-bottom:1px solid #e8ecf0;color:var(--text-secondary)}
+pre{background:var(--code-bg);color:var(--code-text);border-radius:10px;padding:20px 22px;overflow-x:auto;font-size:13px;line-height:1.65;margin:14px 0 20px;position:relative}
+pre .lang-label{position:absolute;top:8px;right:12px;font-size:10px;color:#6e7681;text-transform:uppercase;letter-spacing:.8px;font-family:monospace}
+code{font-family:'Cascadia Code','Fira Code',Consolas,monospace}
+:not(pre)>code{background:#eef2f7;color:#c7254e;padding:2px 6px;border-radius:4px;font-size:13px}
+.kw{color:#ff7b72}.str{color:#a5d6ff}.cm{color:#8b949e}.fn{color:#d2a8ff}.var{color:#ffa657}.num{color:#79c0ff}.op{color:#ff7b72}
+.badge-pill{display:inline-block;border-radius:12px;padding:3px 10px;font-size:11px;font-weight:600;margin:2px}
+.pill-blue{background:#dbeafe;color:#1e40af}
+.pill-orange{background:#fff7ed;color:#c2410c}
+.pill-green{background:#dcfce7;color:#166534}
+.pill-red{background:#fee2e2;color:#991b1b}
+.pill-purple{background:#f3e8ff;color:#6b21a8}
+.pill-yellow{background:#fef9c3;color:#854d0e}
+.mcq{background:#fff;border:1px solid var(--border);border-radius:10px;padding:20px;margin:14px 0;box-shadow:0 1px 4px rgba(0,0,0,.05)}
+.mcq .question{font-weight:600;margin-bottom:12px;color:var(--text-primary)}
+.mcq .options{list-style:none;margin:0;padding:0}
+.mcq .options li{padding:8px 12px;border-radius:6px;margin-bottom:6px;cursor:pointer;transition:background .15s;border:1px solid #e5e7eb;font-size:14px;color:var(--text-secondary)}
+.mcq .options li:hover{background:#f0f7ff;border-color:var(--azure-blue)}
+.mcq .options li.correct{background:#dcfce7;border-color:#16a34a;color:#166534;font-weight:600}
+.mcq .answer-box{margin-top:12px;padding:10px 14px;background:#f0f9ff;border-radius:6px;font-size:13px;display:none;color:var(--text-secondary)}
+.mcq .answer-box.show{display:block}
+.mcq .reveal-btn{margin-top:10px;background:var(--azure-blue);color:#fff;border:none;padding:7px 16px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:500}
+.mcq .reveal-btn:hover{background:#005fa3}
+.flashcard-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;margin:16px 0}
+.flashcard{background:#fff;border:1px solid var(--border);border-radius:10px;padding:16px;cursor:pointer;transition:box-shadow .2s;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.flashcard:hover{box-shadow:0 4px 12px rgba(0,120,212,.15)}
+.flashcard .front{font-weight:600;color:var(--azure-dark);font-size:14px;margin-bottom:8px}
+.flashcard .back{font-size:13px;color:var(--text-secondary);padding-top:8px;border-top:1px dashed #d0d7de;display:none}
+.cheat-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0}
+@media(max-width:700px){.cheat-grid{grid-template-columns:1fr}}
+.cheat-card{background:#fff;border-radius:10px;border:1px solid var(--border);padding:18px;box-shadow:0 1px 4px rgba(0,0,0,.05)}
+.cheat-card h4{font-size:13px;font-weight:700;color:var(--azure-blue);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #e8ecf0}
+.module-overview{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin:20px 0}
+.mod-card{background:#fff;border:2px solid var(--border);border-radius:10px;padding:16px;transition:border-color .2s}
+.mod-card:hover{border-color:var(--azure-blue)}
+.mod-card .weight{font-size:11px;font-weight:700;color:var(--accent-orange);text-transform:uppercase;letter-spacing:.5px}
+.mod-card .title{font-size:14px;font-weight:700;color:var(--text-primary);margin-top:4px}
+.mod-card .desc{font-size:12px;color:var(--text-secondary);margin-top:4px}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin:16px 0}
+@media(max-width:680px){.two-col{grid-template-columns:1fr}}
+.score-box{background:#e8f5e9;border-radius:8px;padding:12px 16px;margin-bottom:20px;font-size:14px;font-weight:600;color:#2e7d32}
+@media print{#sidebar,#topbar{display:none}#main{margin-left:0}#content{padding:20px}pre{white-space:pre-wrap}}
+</style>
+</head>
+<body>
+<div id="sidebar">
+  <div id="sidebar-header">
+    <h2>AI-200 Exam Prep</h2>
+    <p>Azure Data Management Services</p>
+  </div>
+  <nav><ul>
+    <li class="section-title">Overview</li>
+    <li><a href="#overview">Introduction &amp; Objectives</a></li>
+    <li class="section-title">Cosmos DB for NoSQL</li>
+    <li><a href="#cosmos-intro">Architecture &amp; Core Concepts</a></li>
+    <li><a href="#cosmos-sdk">SDK &amp; Connection</a></li>
+    <li><a href="#cosmos-queries">Running Queries</a></li>
+    <li><a href="#cosmos-rus">Request Units (RUs)</a></li>
+    <li><a href="#cosmos-indexing">Indexing Policies</a></li>
+    <li><a href="#cosmos-consistency">Consistency Levels</a></li>
+    <li><a href="#cosmos-vector">Vector Similarity Search</a></li>
+    <li><a href="#cosmos-changefeed">Change Feed Processor</a></li>
+    <li class="section-title">PostgreSQL</li>
+    <li><a href="#pg-intro">Architecture &amp; Connection</a></li>
+    <li><a href="#pg-schema">Schema Design &amp; Data Types</a></li>
+    <li><a href="#pg-pgvector">pgvector Extension</a></li>
+    <li><a href="#pg-indexes">Indexing Strategies</a></li>
+    <li><a href="#pg-vector-search">Vector Search &amp; RAG</a></li>
+    <li><a href="#pg-connection">Connection Optimization</a></li>
+    <li><a href="#pg-compute">Compute &amp; Storage</a></li>
+    <li class="section-title">Azure Managed Redis</li>
+    <li><a href="#redis-intro">Architecture &amp; Core Ops</a></li>
+    <li><a href="#redis-caching">Caching Patterns</a></li>
+    <li><a href="#redis-vector">Vector Indexing</a></li>
+    <li class="section-title">Exam Resources</li>
+    <li><a href="#flashcards">Flashcards</a></li>
+    <li><a href="#mcq">Practice Test (30 Qs)</a></li>
+    <li><a href="#cheatsheet">Cheat Sheet</a></li>
+    <li><a href="#glossary">Glossary</a></li>
+    <li><a href="#tips">Last-Minute Tips</a></li>
+  </ul></nav>
+</div>
+
+<div id="topbar">
+  <span class="breadcrumb">Microsoft AI-200 &rsaquo; Azure Data Management Services for AI (25–30%)</span>
+  <div style="display:flex;align-items:center;gap:12px">
+    <span style="font-size:12px;color:#6b7280">Progress</span>
+    <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progressFill"></div></div>
+  </div>
+</div>
+
+<div id="main">
+<div id="hero">
+  <div class="badge">Microsoft AI-200 &mdash; 25–30% Exam Weight</div>
+  <h1>Develop AI Solutions Using Azure Data Management Services</h1>
+  <p>Master Cosmos DB for NoSQL, Azure Database for PostgreSQL with pgvector, and Azure Managed Redis — the three pillars of AI-grade data management on Azure.</p>
+  <div class="hero-meta">
+    <span>&#127758; Cosmos DB for NoSQL</span>
+    <span>&#128024; PostgreSQL + pgvector</span>
+    <span>&#9889; Azure Managed Redis</span>
+    <span>&#128202; 30 Practice Questions</span>
+  </div>
+</div>
+
+<div id="content">
+
+<section id="overview">
+<h1>Overview &amp; Learning Objectives</h1>
+<p>This domain carries <strong>25–30% of the AI-200 exam weight</strong> — the highest single domain. Every topic here is deeply testable. The three services covered enable the full AI data pipeline: Cosmos DB stores structured AI-enriched documents globally, PostgreSQL with pgvector powers semantic vector search, and Redis accelerates AI inference with low-latency caching and vector retrieval.</p>
+
+<div class="module-overview">
+  <div class="mod-card">
+    <div class="weight">25–30% exam weight</div>
+    <div class="title">Azure Cosmos DB for NoSQL</div>
+    <div class="desc">SDK, RUs, indexing, consistency, vector search, change feed</div>
+  </div>
+  <div class="mod-card">
+    <div class="weight">25–30% exam weight</div>
+    <div class="title">Azure Database for PostgreSQL</div>
+    <div class="desc">pgvector, IVFFlat, HNSW, RAG, PgBouncer, connection optimization</div>
+  </div>
+  <div class="mod-card">
+    <div class="weight">25–30% exam weight</div>
+    <div class="title">Azure Managed Redis</div>
+    <div class="desc">Caching, TTL, eviction, RediSearch, vector indexing, KNN</div>
+  </div>
+</div>
+
+<div class="callout must-know">
+<div class="ct">&#9733; Why This Domain Is Huge</div>
+AI applications need fast, scalable data storage for embeddings, document chunks, chat history, and semantic retrieval. These three services are how Azure AI applications store and retrieve that data. Understanding the tradeoffs between them — and how each handles vector similarity search — is central to the AI-200 exam.
+</div>
+</section>
+
+<section id="cosmos-intro">
+<h1>Azure Cosmos DB for NoSQL — Architecture &amp; Core Concepts <span class="stars"><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span></span></h1>
+
+<h2>What Is Cosmos DB for NoSQL?</h2>
+<p>Azure Cosmos DB for NoSQL is Microsoft's globally distributed, multi-model NoSQL database. It stores JSON documents, scales horizontally across any number of regions, and guarantees single-digit millisecond latency at any scale. For AI applications, it's the go-to store for structured documents enriched with AI metadata and embeddings.</p>
+
+<p><strong>Restaurant Analogy:</strong> Cosmos DB is like a global restaurant chain where every location has the exact same menu (data) available instantly, no matter which branch a customer walks into. The kitchen (Azure infrastructure) synchronizes all locations automatically.</p>
+
+<h2>Resource Hierarchy</h2>
+<pre><code>Cosmos DB Account  (globally unique endpoint: account.documents.azure.com)
+  └── Database      (logical grouping, shared or dedicated throughput)
+        └── Container  (partitioned collection of JSON items)
+              └── Item  (JSON document, up to 2 MB)
+<span class="lang-label">diagram</span></code></pre>
+
+<h2>Key Concepts</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>Concept</th><th>Definition</th><th>Exam Relevance</th></tr></thead>
+<tbody>
+<tr><td><strong>Partition Key</strong></td><td>Property used to distribute items across logical partitions</td><td><span class="badge-pill pill-red">Critical</span></td></tr>
+<tr><td><strong>Request Unit (RU)</strong></td><td>Normalized unit of CPU, memory, and I/O cost for operations</td><td><span class="badge-pill pill-red">Critical</span></td></tr>
+<tr><td><strong>Consistency Level</strong></td><td>Tradeoff between data freshness and performance</td><td><span class="badge-pill pill-red">Critical</span></td></tr>
+<tr><td><strong>Indexing Policy</strong></td><td>Controls which paths are indexed and how</td><td><span class="badge-pill pill-orange">High</span></td></tr>
+<tr><td><strong>Change Feed</strong></td><td>Ordered log of inserts and updates in a container</td><td><span class="badge-pill pill-orange">High</span></td></tr>
+<tr><td><strong>Throughput Modes</strong></td><td>Provisioned, Serverless, Autoscale</td><td><span class="badge-pill pill-orange">High</span></td></tr>
+</tbody>
+</table></div>
+
+<h2>Partition Key Design</h2>
+<p>The partition key is the most important design decision for Cosmos DB performance. A bad partition key causes "hot partitions" — one partition receives most traffic while others sit idle.</p>
+<div class="callout must-know">
+<div class="ct">&#9733; Partition Key Rules</div>
+<ul>
+<li>Choose a property with <strong>high cardinality</strong> (many distinct values)</li>
+<li>Choose a property that <strong>evenly distributes</strong> reads and writes</li>
+<li>Choose a property that <strong>frequently appears</strong> in your WHERE clauses</li>
+<li>Do NOT use a timestamp as a partition key — creates hot partitions</li>
+<li><strong>Good examples:</strong> <code>/userId</code>, <code>/tenantId</code>, <code>/productId</code></li>
+<li><strong>Bad examples:</strong> <code>/createdAt</code>, <code>/status</code> (only a few distinct values)</li>
+</ul>
+</div>
+</section>
+
+<section id="cosmos-sdk">
+<h1>Cosmos DB — SDK Connection <span class="stars"><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span></span></h1>
+
+<h2>Python SDK — Connection</h2>
+<pre><code><span class="kw">from</span> azure.cosmos <span class="kw">import</span> CosmosClient, PartitionKey
+<span class="kw">from</span> azure.identity <span class="kw">import</span> DefaultAzureCredential
+
+<span class="cm"># Option 1: Connection string (dev/test only)</span>
+client = CosmosClient.from_connection_string(
+    conn_str=<span class="str">"AccountEndpoint=https://myaccount.documents.azure.com:443/;AccountKey=..."</span>
+)
+
+<span class="cm"># Option 2: Managed Identity (RECOMMENDED for production)</span>
+credential = DefaultAzureCredential()
+client = CosmosClient(
+    url=<span class="str">"https://myaccount.documents.azure.com:443/"</span>,
+    credential=credential
+)
+
+<span class="cm"># Get database and container references</span>
+db = client.get_database_client(<span class="str">"ai-database"</span>)
+container = db.get_container_client(<span class="str">"documents"</span>)
+
+<span class="cm"># Create database and container if they don't exist</span>
+db = client.create_database_if_not_exists(id=<span class="str">"ai-database"</span>)
+container = db.create_container_if_not_exists(
+    id=<span class="str">"documents"</span>,
+    partition_key=PartitionKey(path=<span class="str">"/userId"</span>),
+    offer_throughput=<span class="num">400</span>
+)
+<span class="lang-label">python</span></code></pre>
+
+<h2>Python SDK — CRUD Operations</h2>
+<pre><code><span class="cm"># CREATE item</span>
+item = {
+    <span class="str">"id"</span>: <span class="str">"doc-001"</span>,
+    <span class="str">"userId"</span>: <span class="str">"user-123"</span>,          <span class="cm"># partition key</span>
+    <span class="str">"content"</span>: <span class="str">"Azure AI document"</span>,
+    <span class="str">"embedding"</span>: [<span class="num">0.1</span>, <span class="num">0.2</span>, <span class="num">0.3</span>, ...]   <span class="cm"># embedding vector</span>
+}
+result = container.create_item(body=item)
+print(f<span class="str">"RU charge: {result['_charge']}"</span>)
+
+<span class="cm"># READ item (point read — cheapest, 1 RU per 1 KB)</span>
+item = container.read_item(
+    item=<span class="str">"doc-001"</span>,
+    partition_key=<span class="str">"user-123"</span>
+)
+
+<span class="cm"># UPSERT item (create or replace)</span>
+container.upsert_item(body=item)
+
+<span class="cm"># DELETE item</span>
+container.delete_item(
+    item=<span class="str">"doc-001"</span>,
+    partition_key=<span class="str">"user-123"</span>
+)
+<span class="lang-label">python</span></code></pre>
+
+<h2>.NET SDK — Connection</h2>
+<pre><code><span class="kw">using</span> Microsoft.Azure.Cosmos;
+<span class="kw">using</span> Azure.Identity;
+
+<span class="cm">// Singleton pattern — IMPORTANT: reuse CosmosClient, don't create per request</span>
+<span class="cm">// CosmosClient is thread-safe and expensive to create</span>
+CosmosClient client = <span class="kw">new</span> CosmosClient(
+    accountEndpoint: <span class="str">"https://myaccount.documents.azure.com:443/"</span>,
+    tokenCredential: <span class="kw">new</span> DefaultAzureCredential(),
+    clientOptions: <span class="kw">new</span> CosmosClientOptions {
+        SerializerOptions = <span class="kw">new</span> CosmosSerializationOptions {
+            PropertyNamingPolicy = CosmosPropertyNamingPolicy.CamelCase
+        },
+        ConnectionMode = ConnectionMode.Direct  <span class="cm">// faster for high throughput</span>
+    }
+);
+
+Database db = client.GetDatabase(<span class="str">"ai-database"</span>);
+Container container = db.GetContainer(<span class="str">"documents"</span>);
+
+<span class="cm">// Read item — point read</span>
+ItemResponse&lt;Document&gt; response = <span class="kw">await</span> container.ReadItemAsync&lt;Document&gt;(
+    id: <span class="str">"doc-001"</span>,
+    partitionKey: <span class="kw">new</span> PartitionKey(<span class="str">"user-123"</span>)
+);
+Console.WriteLine($<span class="str">"RU charge: {response.RequestCharge}"</span>);
+<span class="lang-label">csharp</span></code></pre>
+
+<div class="callout must-know">
+<div class="ct">&#9733; Singleton Pattern — Must Know</div>
+<code>CosmosClient</code> is expensive to initialize (TCP connections, DNS caching). Always create it as a <strong>singleton</strong> — once per application lifetime. Creating a new instance per request wastes resources and RUs on connection setup. Register as a singleton in DI containers.
+</div>
+</section>
+
+<section id="cosmos-queries">
+<h1>Cosmos DB — Running Queries <span class="stars"><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star off">&#9733;</span></span></h1>
+
+<h2>SQL-Like Query Syntax</h2>
+<pre><code><span class="cm">-- Basic SELECT</span>
+<span class="kw">SELECT</span> c.id, c.userId, c.content
+<span class="kw">FROM</span> c
+<span class="kw">WHERE</span> c.userId = <span class="str">'user-123'</span>
+
+<span class="cm">-- Filter with ORDER BY</span>
+<span class="kw">SELECT</span> *
+<span class="kw">FROM</span> c
+<span class="kw">WHERE</span> c.userId = <span class="str">'user-123'</span>
+  <span class="kw">AND</span> c.status = <span class="str">'active'</span>
+<span class="kw">ORDER BY</span> c._ts <span class="kw">DESC</span>
+<span class="kw">OFFSET</span> <span class="num">0</span> <span class="kw">LIMIT</span> <span class="num">10</span>
+
+<span class="cm">-- Array contains</span>
+<span class="kw">SELECT</span> *
+<span class="kw">FROM</span> c
+<span class="kw">WHERE</span> ARRAY_CONTAINS(c.tags, <span class="str">'ai'</span>)
+
+<span class="cm">-- Aggregation</span>
+<span class="kw">SELECT</span> COUNT(1) <span class="kw">AS</span> total, c.category
+<span class="kw">FROM</span> c
+<span class="kw">GROUP BY</span> c.category
+
+<span class="cm">-- EXISTS subquery</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> c
+<span class="kw">WHERE</span> EXISTS(
+    <span class="kw">SELECT VALUE</span> t <span class="kw">FROM</span> t <span class="kw">IN</span> c.tags
+    <span class="kw">WHERE</span> t = <span class="str">'embedding'</span>
+)
+<span class="lang-label">sql</span></code></pre>
+
+<h2>Python SDK — Query Execution</h2>
+<pre><code><span class="kw">from</span> azure.cosmos <span class="kw">import</span> CosmosClient
+<span class="kw">from</span> azure.cosmos.partition_key <span class="kw">import</span> NonePartitionKeyValue
+
+<span class="cm"># Single-partition query (cheap — stays within one partition)</span>
+query = <span class="str">"SELECT * FROM c WHERE c.userId = @userId AND c.status = @status"</span>
+params = [
+    {<span class="str">"name"</span>: <span class="str">"@userId"</span>, <span class="str">"value"</span>: <span class="str">"user-123"</span>},
+    {<span class="str">"name"</span>: <span class="str">"@status"</span>, <span class="str">"value"</span>: <span class="str">"active"</span>}
+]
+
+items = container.query_items(
+    query=query,
+    parameters=params,
+    partition_key=<span class="str">"user-123"</span>   <span class="cm"># scopes to one partition</span>
+)
+
+<span class="kw">for</span> item <span class="kw">in</span> items:
+    print(item[<span class="str">"content"</span>])
+
+<span class="cm"># Cross-partition query (expensive — fans out to all partitions)</span>
+items = container.query_items(
+    query=<span class="str">"SELECT * FROM c WHERE c.status = 'active'"</span>,
+    enable_cross_partition_query=<span class="kw">True</span>
+)
+
+<span class="cm"># Paginated query with continuation token</span>
+items = container.query_items(
+    query=<span class="str">"SELECT * FROM c"</span>,
+    enable_cross_partition_query=<span class="kw">True</span>,
+    max_item_count=<span class="num">50</span>        <span class="cm"># page size</span>
+)
+<span class="lang-label">python</span></code></pre>
+
+<h2>.NET SDK — QueryDefinition</h2>
+<pre><code>QueryDefinition query = <span class="kw">new</span> QueryDefinition(
+    <span class="str">"SELECT * FROM c WHERE c.userId = @userId"</span>
+).WithParameter(<span class="str">"@userId"</span>, <span class="str">"user-123"</span>);
+
+QueryRequestOptions options = <span class="kw">new</span> QueryRequestOptions {
+    PartitionKey = <span class="kw">new</span> PartitionKey(<span class="str">"user-123"</span>),
+    MaxItemCount = <span class="num">50</span>
+};
+
+<span class="kw">using</span> FeedIterator&lt;Document&gt; iterator = container.GetItemQueryIterator&lt;Document&gt;(
+    queryDefinition: query,
+    requestOptions: options
+);
+
+<span class="kw">while</span> (iterator.HasMoreResults) {
+    FeedResponse&lt;Document&gt; page = <span class="kw">await</span> iterator.ReadNextAsync();
+    Console.WriteLine($<span class="str">"Page RU charge: {page.RequestCharge}"</span>);
+    <span class="kw">foreach</span> (<span class="kw">var</span> doc <span class="kw">in</span> page) {
+        Console.WriteLine(doc.Content);
+    }
+}
+<span class="lang-label">csharp</span></code></pre>
+
+<div class="callout warning">
+<div class="ct">&#9888; Cross-Partition Query Cost</div>
+Cross-partition queries fan out to ALL physical partitions and aggregate results. They consume <strong>significantly more RUs</strong> than single-partition queries. Always include the partition key in your query WHERE clause when possible.
+</div>
+</section>
+
+<section id="cosmos-rus">
+<h1>Request Units (RUs) — Optimization <span class="stars"><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span></span></h1>
+
+<h2>What Are Request Units?</h2>
+<p>A Request Unit (RU) is Cosmos DB's normalized currency for database operations. Every read, write, and query has an RU cost based on the CPU, memory, and I/O it consumes. You provision RUs (or use autoscale/serverless), and all operations draw from that budget.</p>
+
+<p><strong>Analogy:</strong> RUs are like fuel in a car. Every drive (operation) burns some fuel. You fill the tank (provision throughput) ahead of time. If you run out of fuel mid-journey, you get rate-limited (429 Too Many Requests).</p>
+
+<h2>RU Cost Reference</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>Operation</th><th>Approximate RU Cost</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td>Point read (by id + partition key)</td><td><strong>1 RU per 1 KB</strong></td><td>Cheapest operation; always use when possible</td></tr>
+<tr><td>Write / Upsert</td><td>~5–10 RUs per 1 KB</td><td>Higher due to index updates</td></tr>
+<tr><td>Delete</td><td>~5 RUs</td><td>Index update cost</td></tr>
+<tr><td>Simple query (single partition)</td><td>2–5 RUs</td><td>Varies by complexity and result size</td></tr>
+<tr><td>Cross-partition query</td><td>10–100+ RUs</td><td>Fans out; avoid if possible</td></tr>
+<tr><td>Query with aggregate (COUNT, SUM)</td><td>5–20+ RUs</td><td>Must scan matching items</td></tr>
+</tbody>
+</table></div>
+
+<h2>Throughput Modes</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>Mode</th><th>How It Works</th><th>Best For</th><th>Min Cost</th></tr></thead>
+<tbody>
+<tr><td><strong>Provisioned</strong></td><td>Fixed RU/s you reserve; pay whether used or not</td><td>Predictable, steady workloads</td><td>400 RU/s</td></tr>
+<tr><td><strong>Autoscale</strong></td><td>Scales between 10%–100% of max RU/s automatically</td><td>Variable/unpredictable workloads</td><td>1000 RU/s max (scales to 100)</td></tr>
+<tr><td><strong>Serverless</strong></td><td>Pay per RU consumed, no pre-provisioning</td><td>Sporadic / dev workloads</td><td>$0 when idle</td></tr>
+</tbody>
+</table></div>
+
+<div class="callout must-know">
+<div class="ct">&#9733; RU Optimization Strategies</div>
+<ol>
+<li><strong>Use point reads</strong> (<code>ReadItemAsync</code>) over queries — 1 RU vs 5+ RUs</li>
+<li><strong>Include partition key</strong> in all queries — avoids cross-partition fan-out</li>
+<li><strong>Exclude unused paths</strong> from indexing — every indexed path increases write RU cost</li>
+<li><strong>Use projections</strong> (<code>SELECT c.id, c.name</code>) instead of <code>SELECT *</code></li>
+<li><strong>Batch writes</strong> — use TransactionalBatch for atomic multi-item writes</li>
+<li><strong>Enable bulk execution mode</strong> in SDK for large bulk imports</li>
+</ol>
+</div>
+
+<h2>Measuring RU Consumption</h2>
+<pre><code><span class="cm"># Python — check RU charge after operation</span>
+response = container.read_item(item=<span class="str">"doc-001"</span>, partition_key=<span class="str">"user-123"</span>)
+print(f<span class="str">"RU charge: {container.client_connection.last_response_headers['x-ms-request-charge']}"</span>)
+
+<span class="cm"># Better: use response headers via raw response</span>
+response = container.upsert_item(
+    body=item,
+    response_hook=<span class="kw">lambda</span> h, _: print(f<span class="str">"RU: {h['x-ms-request-charge']}"</span>)
+)
+<span class="lang-label">python</span></code></pre>
+
+<pre><code><span class="cm">// .NET — RequestCharge property on every response</span>
+ItemResponse&lt;Document&gt; response = <span class="kw">await</span> container.ReadItemAsync&lt;Document&gt;(
+    id: <span class="str">"doc-001"</span>,
+    partitionKey: <span class="kw">new</span> PartitionKey(<span class="str">"user-123"</span>)
+);
+Console.WriteLine($<span class="str">"RU: {response.RequestCharge}"</span>);
+
+FeedResponse&lt;Document&gt; page = <span class="kw">await</span> iterator.ReadNextAsync();
+Console.WriteLine($<span class="str">"Query page RU: {page.RequestCharge}"</span>);
+<span class="lang-label">csharp</span></code></pre>
+</section>
+
+<section id="cosmos-indexing">
+<h1>Cosmos DB — Indexing Policies <span class="stars"><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star off">&#9733;</span></span></h1>
+
+<h2>Default Indexing Policy</h2>
+<p>By default, Cosmos DB automatically indexes <strong>all properties</strong> of every item. This makes queries fast but increases write RU costs (each indexed path adds work on every write). For AI workloads with large embedding arrays, this default behavior is costly — you should exclude embedding paths from indexing.</p>
+
+<h2>Indexing Policy JSON</h2>
+<pre><code>{
+  <span class="str">"indexingMode"</span>: <span class="str">"consistent"</span>,      <span class="cm">// consistent | lazy | none</span>
+  <span class="str">"automatic"</span>: <span class="kw">true</span>,
+  <span class="str">"includedPaths"</span>: [
+    { <span class="str">"path"</span>: <span class="str">"/*"</span> }               <span class="cm">// index everything by default</span>
+  ],
+  <span class="str">"excludedPaths"</span>: [
+    { <span class="str">"path"</span>: <span class="str">"/embedding/*"</span> },     <span class="cm">// EXCLUDE embedding array — saves write RUs</span>
+    { <span class="str">"path"</span>: <span class="str">"/rawContent/*"</span> },    <span class="cm">// exclude large text fields</span>
+    { <span class="str">"path"</span>: <span class="str">"/\"_etag\"/?"</span> }      <span class="cm">// always exclude _etag</span>
+  ],
+  <span class="str">"compositeIndexes"</span>: [
+    [
+      { <span class="str">"path"</span>: <span class="str">"/userId"</span>, <span class="str">"order"</span>: <span class="str">"ascending"</span> },
+      { <span class="str">"path"</span>: <span class="str">"/timestamp"</span>, <span class="str">"order"</span>: <span class="str">"descending"</span> }
+    ]
+  ]
+}
+<span class="lang-label">json</span></code></pre>
+
+<h2>Indexing Modes</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>Mode</th><th>Behavior</th><th>Use Case</th></tr></thead>
+<tbody>
+<tr><td><code>consistent</code></td><td>Index updated synchronously on every write</td><td>Default; queries always see latest data</td></tr>
+<tr><td><code>lazy</code></td><td>Index updated asynchronously in background</td><td>Write-heavy workloads; queries may miss recent items</td></tr>
+<tr><td><code>none</code></td><td>No indexing; only point reads work</td><td>Append-only logs; bulk import scenarios</td></tr>
+</tbody>
+</table></div>
+
+<div class="callout tip">
+<div class="ct">&#9989; AI Workload Best Practice</div>
+For AI applications that store embeddings: <strong>exclude</strong> the embedding array path from indexing (<code>/embedding/*</code>). Embeddings are 1536+ floats — indexing them adds significant write cost and the index won't be used for vector queries anyway (vector queries use a separate vector index).
+</div>
+
+<h2>Composite Indexes</h2>
+<p>Composite indexes are required for <code>ORDER BY</code> on multiple fields and for queries that filter on one field and sort on another.</p>
+<pre><code><span class="cm">-- Requires a composite index on (userId ASC, timestamp DESC)</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> c
+<span class="kw">WHERE</span> c.userId = <span class="str">'user-123'</span>
+<span class="kw">ORDER BY</span> c.userId <span class="kw">ASC</span>, c.timestamp <span class="kw">DESC</span>
+<span class="lang-label">sql</span></code></pre>
+
+<div class="callout warning">
+<div class="ct">&#9888; Exam Trap — ORDER BY Multi-Field</div>
+If a query uses <code>ORDER BY</code> on multiple fields, Cosmos DB requires a <strong>composite index</strong> for those fields in the same order and direction. Without it, the query fails with an error — it doesn't fall back to a slower scan.
+</div>
+</section>
+
+<section id="cosmos-consistency">
+<h1>Cosmos DB — Consistency Levels <span class="stars"><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span></span></h1>
+
+<h2>The Five Consistency Levels</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>Level</th><th>Guarantee</th><th>Latency</th><th>RU Cost</th><th>Best For</th></tr></thead>
+<tbody>
+<tr><td><span class="badge-pill pill-red">Strong</span></td><td>Always reads the latest committed write; linearizable</td><td>Highest</td><td>2x reads</td><td>Financial data, critical consistency</td></tr>
+<tr><td><span class="badge-pill pill-orange">Bounded Staleness</span></td><td>Reads lag at most K versions or T seconds behind writes</td><td>High</td><td>2x reads</td><td>Near-real-time apps needing bounded lag</td></tr>
+<tr><td><span class="badge-pill pill-yellow">Session</span></td><td>Consistent within a single client session (default)</td><td>Medium</td><td>Normal</td><td>User-specific reads (default &amp; recommended)</td></tr>
+<tr><td><span class="badge-pill pill-blue">Consistent Prefix</span></td><td>No out-of-order reads; never sees partial writes</td><td>Low</td><td>Normal</td><td>Social media feeds, ordered event logs</td></tr>
+<tr><td><span class="badge-pill pill-green">Eventual</span></td><td>Highest availability; reads may be stale</td><td>Lowest</td><td>Normal</td><td>Non-critical reads, recommendation engines</td></tr>
+</tbody>
+</table></div>
+
+<div class="callout must-know">
+<div class="ct">&#9733; Consistency Level Memory Trick</div>
+<strong>"Strong → Bounded → Session → Prefix → Eventual"</strong><br>
+Moving right: <em>lower latency, lower cost, weaker consistency</em>.<br>
+Moving left: <em>stronger guarantees, higher cost, higher latency</em>.<br><br>
+<strong>Session is the default and the most commonly used.</strong> It gives you read-your-own-writes consistency within a client session — exactly what most user-facing apps need.
+</div>
+
+<h2>Setting Consistency in SDK</h2>
+<pre><code><span class="cm"># Python — override at request level</span>
+<span class="kw">from</span> azure.cosmos <span class="kw">import</span> ConsistencyLevel
+
+item = container.read_item(
+    item=<span class="str">"doc-001"</span>,
+    partition_key=<span class="str">"user-123"</span>,
+    headers={<span class="str">"x-ms-consistency-level"</span>: <span class="str">"Strong"</span>}
+)
+<span class="lang-label">python</span></code></pre>
+
+<pre><code><span class="cm">// .NET — override per request</span>
+ItemRequestOptions options = <span class="kw">new</span> ItemRequestOptions {
+    ConsistencyLevel = ConsistencyLevel.Strong
+};
+ItemResponse&lt;Document&gt; response = <span class="kw">await</span> container.ReadItemAsync&lt;Document&gt;(
+    id: <span class="str">"doc-001"</span>,
+    partitionKey: <span class="kw">new</span> PartitionKey(<span class="str">"user-123"</span>),
+    requestOptions: options
+);
+<span class="lang-label">csharp</span></code></pre>
+
+<div class="callout info">
+<div class="ct">Consistency Level Rules</div>
+You can <strong>weaken</strong> the account-level consistency for individual requests (e.g., account set to Session, request overrides to Eventual). You can <strong>NOT strengthen</strong> beyond the account-level setting per request. Strong and Bounded Staleness double the RU cost for reads.
+</div>
+</section>
+
+<section id="cosmos-vector">
+<h1>Cosmos DB — Vector Similarity Search <span class="stars"><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span></span></h1>
+
+<h2>Why Vector Search in Cosmos DB?</h2>
+<p>Cosmos DB natively supports storing embeddings and running vector similarity search using the <strong>DiskANN algorithm</strong> — a high-performance approximate nearest-neighbor index. This allows you to implement semantic retrieval and RAG directly in Cosmos DB without a separate vector database.</p>
+
+<h2>Step 1 — Configure Vector Embedding Policy</h2>
+<pre><code><span class="cm"># Define the embedding policy when creating the container</span>
+<span class="kw">from</span> azure.cosmos <span class="kw">import</span> CosmosClient, PartitionKey
+<span class="kw">from</span> azure.cosmos.models <span class="kw">import</span> VectorEmbeddingPolicy, VectorEmbedding, VectorIndexingPolicy, VectorIndex
+
+embedding_policy = {
+    <span class="str">"vectorEmbeddings"</span>: [
+        {
+            <span class="str">"path"</span>: <span class="str">"/embedding"</span>,          <span class="cm"># JSON path to the vector field</span>
+            <span class="str">"dataType"</span>: <span class="str">"float32"</span>,         <span class="cm"># float32 | int8 | uint8</span>
+            <span class="str">"distanceFunction"</span>: <span class="str">"cosine"</span>,   <span class="cm"># cosine | dotproduct | euclidean</span>
+            <span class="str">"dimensions"</span>: <span class="num">1536</span>              <span class="cm"># must match your embedding model output</span>
+        }
+    ]
+}
+
+indexing_policy = {
+    <span class="str">"automatic"</span>: <span class="kw">true</span>,
+    <span class="str">"indexingMode"</span>: <span class="str">"consistent"</span>,
+    <span class="str">"includedPaths"</span>: [{<span class="str">"path"</span>: <span class="str">"/*"</span>}],
+    <span class="str">"excludedPaths"</span>: [{<span class="str">"path"</span>: <span class="str">"/embedding/*"</span>}],   <span class="cm"># exclude from B-tree index</span>
+    <span class="str">"vectorIndexes"</span>: [
+        {
+            <span class="str">"path"</span>: <span class="str">"/embedding"</span>,
+            <span class="str">"type"</span>: <span class="str">"diskANN"</span>              <span class="cm"># DiskANN = high-performance ANN index</span>
+        }
+    ]
+}
+
+container = db.create_container_if_not_exists(
+    id=<span class="str">"documents"</span>,
+    partition_key=PartitionKey(path=<span class="str">"/userId"</span>),
+    indexing_policy=indexing_policy,
+    vector_embedding_policy=embedding_policy
+)
+<span class="lang-label">python</span></code></pre>
+
+<h2>Step 2 — Store Documents with Embeddings</h2>
+<pre><code><span class="kw">from</span> openai <span class="kw">import</span> AzureOpenAI
+
+openai_client = AzureOpenAI(
+    azure_endpoint=<span class="str">"https://myopenai.openai.azure.com/"</span>,
+    api_key=<span class="str">"..."</span>,
+    api_version=<span class="str">"2024-02-01"</span>
+)
+
+<span class="kw">def</span> get_embedding(text: str) -&gt; list[float]:
+    response = openai_client.embeddings.create(
+        input=text,
+        model=<span class="str">"text-embedding-ada-002"</span>  <span class="cm"># outputs 1536 dimensions</span>
+    )
+    <span class="kw">return</span> response.data[<span class="num">0</span>].embedding
+
+doc = {
+    <span class="str">"id"</span>: <span class="str">"chunk-001"</span>,
+    <span class="str">"userId"</span>: <span class="str">"user-123"</span>,
+    <span class="str">"content"</span>: <span class="str">"Azure Cosmos DB supports global distribution..."</span>,
+    <span class="str">"category"</span>: <span class="str">"azure-docs"</span>,
+    <span class="str">"embedding"</span>: get_embedding(<span class="str">"Azure Cosmos DB supports global distribution..."</span>)
+}
+container.upsert_item(body=doc)
+<span class="lang-label">python</span></code></pre>
+
+<h2>Step 3 — Vector Similarity Search with VectorDistance()</h2>
+<pre><code><span class="cm"># Get embedding for the search query</span>
+query_embedding = get_embedding(<span class="str">"How does Cosmos DB handle global distribution?"</span>)
+
+<span class="cm"># Run vector similarity search using VectorDistance()</span>
+query = <span class="str">"""
+    SELECT TOP 5
+        c.id, c.content, c.category,
+        VectorDistance(c.embedding, @queryEmbedding) AS score
+    FROM c
+    WHERE c.category = @category
+    ORDER BY VectorDistance(c.embedding, @queryEmbedding)
+"""</span>
+
+params = [
+    {<span class="str">"name"</span>: <span class="str">"@queryEmbedding"</span>, <span class="str">"value"</span>: query_embedding},
+    {<span class="str">"name"</span>: <span class="str">"@category"</span>, <span class="str">"value"</span>: <span class="str">"azure-docs"</span>}
+]
+
+results = list(container.query_items(
+    query=query,
+    parameters=params,
+    enable_cross_partition_query=<span class="kw">True</span>
+))
+
+<span class="kw">for</span> r <span class="kw">in</span> results:
+    print(f<span class="str">"Score: {r['score']:.4f} | {r['content'][:100]}"</span>)
+<span class="lang-label">python</span></code></pre>
+
+<div class="callout must-know">
+<div class="ct">&#9733; Vector Search Key Facts</div>
+<ul>
+<li><code>VectorDistance()</code> is the Cosmos DB function for vector similarity in queries</li>
+<li>Supported distance functions: <code>cosine</code>, <code>dotproduct</code>, <code>euclidean</code></li>
+<li>For cosine similarity: <strong>lower score = more similar</strong> (distance, not similarity)</li>
+<li>The <code>diskANN</code> index type enables fast approximate nearest-neighbor (ANN) search</li>
+<li>You MUST exclude the embedding path from the regular B-tree index and add it to <code>vectorIndexes</code></li>
+<li>Metadata filters (<code>WHERE c.category = @category</code>) work alongside vector search</li>
+</ul>
+</div>
+</section>
+
+<section id="cosmos-changefeed">
+<h1>Cosmos DB — Change Feed Processor <span class="stars"><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star off">&#9733;</span></span></h1>
+
+<h2>What Is the Change Feed?</h2>
+<p>The change feed is an ordered, persistent log of every <strong>insert and update</strong> to items in a Cosmos DB container. It enables event-driven architectures — any time a document changes, your application can react to it automatically.</p>
+
+<p><strong>Important:</strong> The change feed does NOT include deletes by default (you can enable soft-delete patterns to capture them).</p>
+
+<h2>Common Use Cases</h2>
+<ul>
+<li>Trigger re-embedding when document content changes</li>
+<li>Invalidate Redis cache when source data updates</li>
+<li>Synchronize data to secondary read stores (denormalization)</li>
+<li>Trigger Azure Functions for real-time event processing</li>
+<li>Build audit logs and event sourcing systems</li>
+</ul>
+
+<h2>Change Feed Processor — Architecture</h2>
+<pre><code>Monitored Container  →  Change Feed  →  Change Feed Processor
+(source data)                              (your processing code)
+                                                    ↑
+                                           Lease Container
+                                        (tracks read position)
+<span class="lang-label">diagram</span></code></pre>
+
+<h2>Python SDK — Change Feed Processor</h2>
+<pre><code><span class="kw">import</span> asyncio
+<span class="kw">from</span> azure.cosmos.aio <span class="kw">import</span> CosmosClient
+<span class="kw">from</span> azure.cosmos <span class="kw">import</span> PartitionKey
+
+<span class="kw">async def</span> handle_changes(changes: list, context) -&gt; <span class="kw">None</span>:
+    <span class="str">"""Called when new/updated items are detected."""</span>
+    <span class="kw">for</span> change <span class="kw">in</span> changes:
+        print(f<span class="str">"Changed item: {change['id']}"</span>)
+        <span class="cm"># Example: trigger re-embedding for updated content</span>
+        <span class="kw">if</span> <span class="str">"content"</span> <span class="kw">in</span> change:
+            <span class="kw">await</span> regenerate_embedding(change)
+
+<span class="kw">async def</span> run_change_feed_processor():
+    client = CosmosClient(url=<span class="str">"..."</span>, credential=DefaultAzureCredential())
+    db = client.get_database_client(<span class="str">"ai-database"</span>)
+
+    monitored = db.get_container_client(<span class="str">"documents"</span>)    <span class="cm"># source</span>
+    lease = db.get_container_client(<span class="str">"leases"</span>)           <span class="cm"># lease container</span>
+
+    <span class="cm"># Create lease container if it doesn't exist</span>
+    <span class="kw">await</span> db.create_container_if_not_exists(
+        id=<span class="str">"leases"</span>,
+        partition_key=PartitionKey(path=<span class="str">"/id"</span>)
+    )
+
+    processor = monitored.get_change_feed_processor(
+        processor_name=<span class="str">"embedding-processor"</span>,
+        handler=handle_changes,
+        lease_container=lease
+    )
+
+    <span class="kw">await</span> processor.start()
+    print(<span class="str">"Change feed processor running..."</span>)
+    <span class="kw">await</span> asyncio.sleep(<span class="num">3600</span>)   <span class="cm"># run for 1 hour</span>
+    <span class="kw">await</span> processor.stop()
+<span class="lang-label">python</span></code></pre>
+
+<h2>.NET SDK — Change Feed Processor</h2>
+<pre><code>Container monitored = db.GetContainer(<span class="str">"documents"</span>);
+Container leaseContainer = db.GetContainer(<span class="str">"leases"</span>);
+
+ChangeFeedProcessor processor = monitored
+    .GetChangeFeedProcessorBuilder&lt;Document&gt;(
+        processorName: <span class="str">"embedding-processor"</span>,
+        onChangesDelegate: HandleChangesAsync
+    )
+    .WithInstanceName(<span class="str">"instance-1"</span>)       <span class="cm">// unique name per running instance</span>
+    .WithLeaseContainer(leaseContainer)
+    .WithStartTime(DateTime.UtcNow)        <span class="cm">// start from now; omit for all history</span>
+    .Build();
+
+<span class="kw">await</span> processor.StartAsync();
+
+<span class="cm">// Handler called for each batch of changes</span>
+<span class="kw">static async</span> Task HandleChangesAsync(
+    ChangeFeedProcessorContext context,
+    IReadOnlyCollection&lt;Document&gt; changes,
+    CancellationToken ct)
+{
+    <span class="kw">foreach</span> (<span class="kw">var</span> doc <span class="kw">in</span> changes)
+    {
+        Console.WriteLine($<span class="str">"Changed: {doc.Id}"</span>);
+        <span class="kw">await</span> RegenerateEmbeddingAsync(doc);
+    }
+}
+<span class="lang-label">csharp</span></code></pre>
+
+<div class="callout must-know">
+<div class="ct">&#9733; Change Feed Key Facts</div>
+<ul>
+<li>Change feed captures <strong>inserts and updates only</strong> (NOT deletes by default)</li>
+<li>Requires a <strong>lease container</strong> to track processing position (checkpoint)</li>
+<li><code>processorName</code> identifies this processor; multiple instances with different <code>instanceName</code> share the load</li>
+<li>If the processor stops and restarts, it continues from the last checkpoint (no re-processing)</li>
+<li>Multiple processors with different <code>processorName</code> each get their own independent view of the feed</li>
+</ul>
+</div>
+</section>
+
+<section id="pg-intro">
+<h1>Azure Database for PostgreSQL — Architecture &amp; Connection <span class="stars"><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span></span></h1>
+
+<h2>What Is Azure Database for PostgreSQL?</h2>
+<p>Azure Database for PostgreSQL Flexible Server is a fully managed PostgreSQL service. For AI workloads, it's the primary choice when you need relational data + vector similarity search in the same database, using the <strong>pgvector</strong> extension. It's ideal for RAG (Retrieval-Augmented Generation) patterns where embeddings and metadata live together.</p>
+
+<h2>Python — Connect with psycopg2</h2>
+<pre><code><span class="kw">import</span> psycopg2
+<span class="kw">from</span> psycopg2.extras <span class="kw">import</span> RealDictCursor
+
+conn = psycopg2.connect(
+    host=<span class="str">"myserver.postgres.database.azure.com"</span>,
+    port=<span class="num">5432</span>,
+    database=<span class="str">"ai_db"</span>,
+    user=<span class="str">"myadmin"</span>,
+    password=<span class="str">"MySecurePassword123!"</span>,
+    sslmode=<span class="str">"require"</span>        <span class="cm"># SSL is required on Azure PostgreSQL</span>
+)
+
+cursor = conn.cursor(cursor_factory=RealDictCursor)  <span class="cm"># returns dict-like rows</span>
+cursor.execute(<span class="str">"SELECT version();"</span>)
+print(cursor.fetchone())
+conn.close()
+<span class="lang-label">python</span></code></pre>
+
+<h2>Python — Async with asyncpg (High Throughput)</h2>
+<pre><code><span class="kw">import</span> asyncpg
+<span class="kw">import</span> asyncio
+
+<span class="kw">async def</span> main():
+    pool = <span class="kw">await</span> asyncpg.create_pool(
+        host=<span class="str">"myserver.postgres.database.azure.com"</span>,
+        port=<span class="num">5432</span>,
+        database=<span class="str">"ai_db"</span>,
+        user=<span class="str">"myadmin"</span>,
+        password=<span class="str">"MySecurePassword123!"</span>,
+        ssl=<span class="str">"require"</span>,
+        min_size=<span class="num">5</span>,     <span class="cm"># minimum pool connections</span>
+        max_size=<span class="num">20</span>     <span class="cm"># maximum pool connections</span>
+    )
+
+    <span class="kw">async with</span> pool.acquire() <span class="kw">as</span> conn:
+        rows = <span class="kw">await</span> conn.fetch(
+            <span class="str">"SELECT id, content FROM documents WHERE category = $1"</span>,
+            <span class="str">"azure-docs"</span>
+        )
+        <span class="kw">for</span> row <span class="kw">in</span> rows:
+            print(row[<span class="str">"content"</span>])
+
+    <span class="kw">await</span> pool.close()
+
+asyncio.run(main())
+<span class="lang-label">python</span></code></pre>
+
+<h2>.NET — Npgsql Connection</h2>
+<pre><code><span class="kw">using</span> Npgsql;
+
+<span class="kw">var</span> connString = <span class="str">"Host=myserver.postgres.database.azure.com;Port=5432;"</span> +
+                 <span class="str">"Database=ai_db;Username=myadmin;Password=MyPass;"</span> +
+                 <span class="str">"SSL Mode=Require;Trust Server Certificate=false"</span>;
+
+<span class="cm">// Use NpgsqlDataSourceBuilder for pooling (recommended)</span>
+<span class="kw">await using var</span> dataSource = NpgsqlDataSource.Create(connString);
+<span class="kw">await using var</span> conn = <span class="kw">await</span> dataSource.OpenConnectionAsync();
+<span class="kw">await using var</span> cmd = <span class="kw">new</span> NpgsqlCommand(<span class="str">"SELECT version()"</span>, conn);
+<span class="kw">var</span> result = <span class="kw">await</span> cmd.ExecuteScalarAsync();
+Console.WriteLine(result);
+<span class="lang-label">csharp</span></code></pre>
+</section>
+
+<section id="pg-schema">
+<h1>PostgreSQL — Schema Design &amp; Data Types <span class="stars"><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star off">&#9733;</span></span></h1>
+
+<h2>Choosing the Right Data Types</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>Data Type</th><th>Use Case</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td><code>UUID</code></td><td>Primary keys for distributed systems</td><td>Use <code>gen_random_uuid()</code> as default</td></tr>
+<tr><td><code>TEXT</code></td><td>Variable-length strings (document content)</td><td>No length limit; use over VARCHAR for flexibility</td></tr>
+<tr><td><code>JSONB</code></td><td>Semi-structured metadata</td><td>Binary JSON; supports indexing with GIN</td></tr>
+<tr><td><code>vector(N)</code></td><td>Embedding vectors of dimension N</td><td>Requires pgvector extension</td></tr>
+<tr><td><code>TIMESTAMP WITH TIME ZONE</code></td><td>Timestamps with timezone awareness</td><td>Always use TIMESTAMPTZ over TIMESTAMP</td></tr>
+<tr><td><code>BIGINT</code></td><td>Integer IDs with high cardinality</td><td>Use BIGSERIAL for auto-increment</td></tr>
+<tr><td><code>BOOLEAN</code></td><td>Flags (is_active, is_deleted)</td><td>Prefer over SMALLINT for booleans</td></tr>
+<tr><td><code>FLOAT4 / FLOAT8</code></td><td>Numeric scores, similarity thresholds</td><td>FLOAT4 = 4 bytes (single precision)</td></tr>
+</tbody>
+</table></div>
+
+<h2>AI Document Store Schema</h2>
+<pre><code><span class="cm">-- Enable required extensions</span>
+<span class="kw">CREATE EXTENSION IF NOT EXISTS</span> vector;          <span class="cm">-- pgvector for embeddings</span>
+<span class="kw">CREATE EXTENSION IF NOT EXISTS</span> "uuid-ossp";     <span class="cm">-- UUID generation</span>
+<span class="kw">CREATE EXTENSION IF NOT EXISTS</span> pg_trgm;         <span class="cm">-- trigram index for text search</span>
+
+<span class="cm">-- Document chunks table for RAG</span>
+<span class="kw">CREATE TABLE</span> document_chunks (
+    id          UUID          <span class="kw">PRIMARY KEY DEFAULT</span> gen_random_uuid(),
+    source_id   UUID          <span class="kw">NOT NULL REFERENCES</span> documents(id) <span class="kw">ON DELETE CASCADE</span>,
+    content     TEXT          <span class="kw">NOT NULL</span>,
+    embedding   vector(<span class="num">1536</span>) <span class="kw">NOT NULL</span>,          <span class="cm">-- OpenAI text-embedding-ada-002</span>
+    metadata    JSONB         <span class="kw">NOT NULL DEFAULT</span> <span class="str">'{}'</span>,
+    category    TEXT,
+    chunk_index INTEGER       <span class="kw">NOT NULL DEFAULT</span> <span class="num">0</span>,
+    created_at  TIMESTAMPTZ   <span class="kw">NOT NULL DEFAULT</span> NOW()
+);
+
+<span class="cm">-- Standard indexes on filter columns</span>
+<span class="kw">CREATE INDEX</span> idx_chunks_category <span class="kw">ON</span> document_chunks(category);
+<span class="kw">CREATE INDEX</span> idx_chunks_source   <span class="kw">ON</span> document_chunks(source_id);
+<span class="kw">CREATE INDEX</span> idx_chunks_meta     <span class="kw">ON</span> document_chunks <span class="kw">USING</span> GIN(metadata);
+<span class="lang-label">sql</span></code></pre>
+</section>
+
+<section id="pg-pgvector">
+<h1>PostgreSQL — pgvector Extension <span class="stars"><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span></span></h1>
+
+<h2>What Is pgvector?</h2>
+<p>pgvector is an open-source PostgreSQL extension that adds a native <code>vector</code> data type and vector similarity operators. It allows PostgreSQL to store and query embedding vectors directly, without a separate vector database.</p>
+
+<h2>Distance Operators</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>Operator</th><th>Distance Function</th><th>Best For</th><th>Interpretation</th></tr></thead>
+<tbody>
+<tr><td><code>&lt;-&gt;</code></td><td>L2 (Euclidean) distance</td><td>Spatial similarity</td><td>Lower = more similar</td></tr>
+<tr><td><code>&lt;=&gt;</code></td><td>Cosine distance</td><td>Text embeddings (OpenAI)</td><td>Lower = more similar (0 = identical)</td></tr>
+<tr><td><code>&lt;#&gt;</code></td><td>Negative inner product</td><td>Normalized vectors</td><td>More negative = more similar</td></tr>
+</tbody>
+</table></div>
+
+<div class="callout must-know">
+<div class="ct">&#9733; Which Operator to Use?</div>
+For OpenAI text embeddings (<code>text-embedding-ada-002</code>, <code>text-embedding-3-small</code>): use <strong>cosine distance (<code>&lt;=&gt;</code>)</strong>. These models produce normalized vectors where cosine similarity is the natural distance metric.
+</div>
+
+<h2>Inserting Embeddings — Python</h2>
+<pre><code><span class="kw">import</span> psycopg2
+<span class="kw">from</span> pgvector.psycopg2 <span class="kw">import</span> register_vector
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+
+conn = psycopg2.connect(<span class="str">"..."</span>)
+register_vector(conn)    <span class="cm"># register pgvector type with psycopg2</span>
+
+<span class="cm"># Get embedding from Azure OpenAI</span>
+embedding = get_embedding(<span class="str">"Azure PostgreSQL flexible server features"</span>)
+
+cursor = conn.cursor()
+cursor.execute(
+    <span class="str">"""
+    INSERT INTO document_chunks (content, embedding, category, metadata)
+    VALUES (%s, %s, %s, %s)
+    RETURNING id
+    """</span>,
+    (
+        <span class="str">"Azure PostgreSQL flexible server features"</span>,
+        np.array(embedding),     <span class="cm"># pass as numpy array</span>
+        <span class="str">"azure-docs"</span>,
+        {<span class="str">"source"</span>: <span class="str">"microsoft-docs"</span>, <span class="str">"version"</span>: <span class="str">"2024"</span>}
+    )
+)
+conn.commit()
+<span class="lang-label">python</span></code></pre>
+</section>
+
+<section id="pg-indexes">
+<h1>PostgreSQL — pgvector Indexing Strategies <span class="stars"><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span></span></h1>
+
+<h2>IVFFlat vs HNSW</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>Feature</th><th>IVFFlat</th><th>HNSW</th></tr></thead>
+<tbody>
+<tr><td>Algorithm</td><td>Inverted File with Flat Quantization</td><td>Hierarchical Navigable Small World</td></tr>
+<tr><td>Build time</td><td>Faster</td><td>Slower (builds graph structure)</td></tr>
+<tr><td>Build memory</td><td>Lower</td><td>Higher</td></tr>
+<tr><td>Query speed</td><td>Fast</td><td>Faster</td></tr>
+<tr><td>Recall quality</td><td>Good</td><td>Better (higher recall)</td></tr>
+<tr><td>Key parameter (build)</td><td><code>lists</code> (number of clusters)</td><td><code>m</code>, <code>ef_construction</code></td></tr>
+<tr><td>Key parameter (query)</td><td><code>ivfflat.probes</code></td><td><code>hnsw.ef_search</code></td></tr>
+<tr><td>Recommended for</td><td>Large datasets, memory-constrained</td><td>High-recall requirements</td></tr>
+</tbody>
+</table></div>
+
+<h2>IVFFlat Index</h2>
+<pre><code><span class="cm">-- Create IVFFlat index for cosine distance</span>
+<span class="cm">-- lists = number of clusters; rule of thumb: sqrt(num_rows)</span>
+<span class="cm">-- For 1M rows: lists = 1000</span>
+<span class="kw">CREATE INDEX</span> idx_chunks_embedding_ivf
+<span class="kw">ON</span> document_chunks
+<span class="kw">USING</span> ivfflat (embedding vector_cosine_ops)
+<span class="kw">WITH</span> (lists = <span class="num">100</span>);
+
+<span class="cm">-- Set probes at query time (higher = better recall, slower)</span>
+<span class="cm">-- Default: 1 (fast but lower recall)</span>
+<span class="cm">-- Recommendation: probes = lists / 10 for good recall</span>
+<span class="kw">SET</span> ivfflat.probes = <span class="num">10</span>;
+
+<span class="kw">SELECT</span> id, content, embedding &lt;=&gt; <span class="str">'[0.1, 0.2, ...]'</span>::vector <span class="kw">AS</span> distance
+<span class="kw">FROM</span> document_chunks
+<span class="kw">ORDER BY</span> embedding &lt;=&gt; <span class="str">'[0.1, 0.2, ...]'</span>::vector
+<span class="kw">LIMIT</span> <span class="num">10</span>;
+<span class="lang-label">sql</span></code></pre>
+
+<h2>HNSW Index</h2>
+<pre><code><span class="cm">-- Create HNSW index for cosine distance</span>
+<span class="cm">-- m = max connections per node (default 16; higher = better recall, more memory)</span>
+<span class="cm">-- ef_construction = candidate list size during build (default 64; higher = better quality)</span>
+<span class="kw">CREATE INDEX</span> idx_chunks_embedding_hnsw
+<span class="kw">ON</span> document_chunks
+<span class="kw">USING</span> hnsw (embedding vector_cosine_ops)
+<span class="kw">WITH</span> (m = <span class="num">16</span>, ef_construction = <span class="num">64</span>);
+
+<span class="cm">-- Set ef_search at query time (higher = better recall, slower)</span>
+<span class="cm">-- Default: 40; recommendation: >= LIMIT value</span>
+<span class="kw">SET</span> hnsw.ef_search = <span class="num">100</span>;
+<span class="lang-label">sql</span></code></pre>
+
+<h2>Index Operators for Different Distance Functions</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>Operator class</th><th>Distance function</th><th>Use with</th></tr></thead>
+<tbody>
+<tr><td><code>vector_cosine_ops</code></td><td>Cosine distance (<code>&lt;=&gt;</code>)</td><td>Text embeddings</td></tr>
+<tr><td><code>vector_l2_ops</code></td><td>L2 distance (<code>&lt;-&gt;</code>)</td><td>Spatial / image</td></tr>
+<tr><td><code>vector_ip_ops</code></td><td>Inner product (<code>&lt;#&gt;</code>)</td><td>Normalized vectors</td></tr>
+</tbody>
+</table></div>
+
+<div class="callout warning">
+<div class="ct">&#9888; Index Only Used When Below Dimension Limit</div>
+IVFFlat supports up to <strong>2,000 dimensions</strong>. HNSW supports up to <strong>2,000 dimensions</strong>. OpenAI's <code>text-embedding-ada-002</code> produces 1536 dimensions — within the limit. If you use a model with more dimensions, the index won't be used and queries will do a full sequential scan.
+</div>
+
+<div class="callout tip">
+<div class="ct">&#9989; Reducing pgvector Compute Overhead</div>
+<ul>
+<li>Use <strong>partial indexes</strong> to limit index to frequently queried subsets: <code>WHERE category = 'news'</code></li>
+<li>Increase <code>maintenance_work_mem</code> before building index (speeds up build)</li>
+<li>For IVFFlat: insert data BEFORE creating the index (more efficient than adding to empty table)</li>
+<li>Consider <strong>half-precision</strong> (<code>halfvec</code>) for large datasets to halve storage</li>
+</ul>
+</div>
+</section>
+
+<section id="pg-vector-search">
+<h1>PostgreSQL — Vector Search &amp; RAG Patterns <span class="stars"><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span></span></h1>
+
+<h2>Basic Vector Similarity Search</h2>
+<pre><code><span class="cm">-- Find top 5 most similar documents to query vector</span>
+<span class="kw">SELECT</span>
+    id,
+    content,
+    category,
+    <span class="num">1</span> - (embedding &lt;=&gt; <span class="str">'[0.1, 0.2, ...]'</span>::vector) <span class="kw">AS</span> cosine_similarity
+<span class="kw">FROM</span> document_chunks
+<span class="kw">ORDER BY</span> embedding &lt;=&gt; <span class="str">'[0.1, 0.2, ...]'</span>::vector
+<span class="kw">LIMIT</span> <span class="num">5</span>;
+<span class="lang-label">sql</span></code></pre>
+
+<h2>Vector Search with Metadata Filtering</h2>
+<pre><code><span class="cm">-- Semantic search with category filter (pre-filter)</span>
+<span class="kw">SELECT</span>
+    id, content, category,
+    embedding &lt;=&gt; <span class="str">'[...]'</span>::vector <span class="kw">AS</span> distance
+<span class="kw">FROM</span> document_chunks
+<span class="kw">WHERE</span>
+    category = <span class="str">'azure-docs'</span>                       <span class="cm">-- metadata pre-filter</span>
+    <span class="kw">AND</span> created_at &gt; NOW() - INTERVAL <span class="str">'30 days'</span>    <span class="cm">-- recency filter</span>
+    <span class="kw">AND</span> metadata-&gt;&gt;<span class="str">'language'</span> = <span class="str">'en'</span>             <span class="cm">-- JSONB metadata filter</span>
+<span class="kw">ORDER BY</span> embedding &lt;=&gt; <span class="str">'[...]'</span>::vector
+<span class="kw">LIMIT</span> <span class="num">5</span>;
+<span class="lang-label">sql</span></code></pre>
+
+<h2>Full RAG Pipeline — Python</h2>
+<pre><code><span class="kw">from</span> openai <span class="kw">import</span> AzureOpenAI
+<span class="kw">import</span> psycopg2, json, numpy <span class="kw">as</span> np
+<span class="kw">from</span> pgvector.psycopg2 <span class="kw">import</span> register_vector
+
+openai_client = AzureOpenAI(azure_endpoint=<span class="str">"..."</span>, api_key=<span class="str">"..."</span>, api_version=<span class="str">"2024-02-01"</span>)
+
+<span class="kw">def</span> rag_query(user_question: str, category: str = <span class="kw">None</span>, top_k: int = <span class="num">5</span>) -&gt; str:
+    <span class="str">"""Retrieval-Augmented Generation pipeline."""</span>
+
+    <span class="cm"># Step 1: Embed the user's question</span>
+    q_embedding = openai_client.embeddings.create(
+        input=user_question, model=<span class="str">"text-embedding-ada-002"</span>
+    ).data[<span class="num">0</span>].embedding
+
+    <span class="cm"># Step 2: Retrieve similar chunks from PostgreSQL</span>
+    conn = psycopg2.connect(<span class="str">"..."</span>); register_vector(conn)
+    cursor = conn.cursor()
+
+    filter_clause = <span class="str">"AND category = %s"</span> <span class="kw">if</span> category <span class="kw">else</span> <span class="str">""</span>
+    params = [np.array(q_embedding), top_k]
+    <span class="kw">if</span> category: params.insert(<span class="num">1</span>, category)
+
+    cursor.execute(f<span class="str">"""
+        SELECT content, 1 - (embedding &lt;=&gt; %s) AS similarity
+        FROM document_chunks
+        WHERE 1=1 {filter_clause}
+        ORDER BY embedding &lt;=&gt; %s
+        LIMIT %s
+    """</span>, [np.array(q_embedding)] + ([category] <span class="kw">if</span> category <span class="kw">else</span> []) + [np.array(q_embedding), top_k])
+
+    chunks = cursor.fetchall()
+    conn.close()
+
+    <span class="cm"># Step 3: Build context from retrieved chunks</span>
+    context = <span class="str">"\n\n"</span>.join([f<span class="str">"[Relevance: {row[1]:.2f}] {row[0]}"</span> <span class="kw">for</span> row <span class="kw">in</span> chunks])
+
+    <span class="cm"># Step 4: Generate answer with Azure OpenAI + context</span>
+    response = openai_client.chat.completions.create(
+        model=<span class="str">"gpt-4o"</span>,
+        messages=[
+            {<span class="str">"role"</span>: <span class="str">"system"</span>, <span class="str">"content"</span>: <span class="str">"Answer using only the provided context."</span>},
+            {<span class="str">"role"</span>: <span class="str">"user"</span>, <span class="str">"content"</span>: f<span class="str">"Context:\n{context}\n\nQuestion: {user_question}"</span>}
+        ]
+    )
+    <span class="kw">return</span> response.choices[<span class="num">0</span>].message.content
+
+answer = rag_query(<span class="str">"What is the default consistency level in Cosmos DB?"</span>, category=<span class="str">"azure-docs"</span>)
+<span class="lang-label">python</span></code></pre>
+</section>
+
+<section id="pg-connection">
+<h1>PostgreSQL — Connection Optimization <span class="stars"><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star off">&#9733;</span></span></h1>
+
+<h2>The Connection Problem</h2>
+<p>PostgreSQL creates a new OS process per connection. At scale, thousands of connections = thousands of processes = memory exhaustion. The solution is <strong>connection pooling</strong>.</p>
+
+<h2>PgBouncer — Built-in Connection Pooler</h2>
+<p>Azure Database for PostgreSQL Flexible Server includes a built-in PgBouncer connection pooler. Applications connect to PgBouncer (port 6432), which maintains a smaller pool of real PostgreSQL connections.</p>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Pooling Mode</th><th>How It Works</th><th>Best For</th></tr></thead>
+<tbody>
+<tr><td><strong>Transaction</strong></td><td>Connection returned to pool after each transaction</td><td>Highest density; most web apps</td></tr>
+<tr><td><strong>Session</strong></td><td>Connection held for entire client session</td><td>Apps using session-level features (temp tables)</td></tr>
+<tr><td><strong>Statement</strong></td><td>Connection returned after each statement</td><td>Rarely used; doesn't support multi-statement transactions</td></tr>
+</tbody>
+</table></div>
+
+<pre><code><span class="cm"># Connect through PgBouncer (port 6432 instead of 5432)</span>
+conn_string = (
+    <span class="str">"host=myserver.postgres.database.azure.com"</span>
+    <span class="str">" port=6432"</span>           <span class="cm"># PgBouncer port</span>
+    <span class="str">" database=ai_db"</span>
+    <span class="str">" user=myadmin"</span>
+    <span class="str">" password=MyPass"</span>
+    <span class="str">" sslmode=require"</span>
+)
+
+<span class="cm"># .NET connection string with PgBouncer</span>
+<span class="cm"># "Host=server;Port=6432;Database=ai_db;Pooling=true;Max Pool Size=50"</span>
+<span class="lang-label">python</span></code></pre>
+
+<div class="callout must-know">
+<div class="ct">&#9733; PgBouncer Key Facts</div>
+<ul>
+<li>PgBouncer port = <strong>6432</strong> (PostgreSQL direct = 5432)</li>
+<li><strong>Transaction mode</strong> is the default and recommended for most AI workloads</li>
+<li>Transaction mode does NOT support <code>SET</code> commands that persist across statements (use <code>RESET</code> pattern)</li>
+<li>Reduces PostgreSQL <code>max_connections</code> pressure significantly</li>
+<li>Enable in portal: Flexible Server → Server parameters → <code>pgbouncer.enabled = ON</code></li>
+</ul>
+</div>
+</section>
+
+<section id="pg-compute">
+<h1>PostgreSQL — Compute, Memory &amp; Storage for Vector Workloads <span class="stars"><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star off">&#9733;</span><span class="star off">&#9733;</span></span></h1>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Tier</th><th>vCores</th><th>RAM</th><th>Best For</th></tr></thead>
+<tbody>
+<tr><td><strong>Burstable</strong></td><td>1–2</td><td>2–8 GB</td><td>Dev/test; low-traffic apps</td></tr>
+<tr><td><strong>General Purpose</strong></td><td>2–96</td><td>4–672 GB</td><td>Most production AI workloads</td></tr>
+<tr><td><strong>Memory Optimized</strong></td><td>2–96</td><td>8–672 GB (2× RAM per vCore)</td><td>Large vector indexes, high-cache workloads</td></tr>
+</tbody>
+</table></div>
+
+<div class="callout tip">
+<div class="ct">&#9989; Vector Workload Recommendations</div>
+<ul>
+<li><strong>Memory Optimized</strong> tier for HNSW indexes — HNSW loads the entire index into RAM for fast queries</li>
+<li>Increase <code>maintenance_work_mem</code> to 4–8 GB before building vector indexes</li>
+<li>Set <code>max_parallel_workers_per_gather</code> = 4 for parallel vector scans</li>
+<li>Use <strong>Premium SSD v2</strong> storage for high IOPS during index builds</li>
+<li>Enable <strong>storage autogrow</strong> to prevent storage-full failures during bulk embedding loads</li>
+</ul>
+</div>
+</section>
+
+<section id="redis-intro">
+<h1>Azure Managed Redis — Architecture &amp; Core Operations <span class="stars"><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star off">&#9733;</span></span></h1>
+
+<h2>What Is Azure Managed Redis?</h2>
+<p>Azure Managed Redis (AMR) is Microsoft's fully managed Redis Enterprise service on Azure — the premium tier offering of Azure Cache for Redis, powered by Redis Enterprise (not open-source Redis). For AI applications, it serves two primary roles: <strong>low-latency caching</strong> of AI responses and embeddings, and <strong>vector similarity search</strong> via the built-in RediSearch module.</p>
+
+<p><strong>Analogy:</strong> Redis is like a restaurant's hot line — food (data) that's ordered frequently is kept warm and ready to serve instantly, while the main kitchen (database) handles full preparation for new or less frequent orders.</p>
+
+<h2>Key Data Structures</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>Structure</th><th>Commands</th><th>AI Use Case</th></tr></thead>
+<tbody>
+<tr><td><strong>String</strong></td><td>SET, GET, SETEX</td><td>Cache LLM completions, embeddings</td></tr>
+<tr><td><strong>Hash</strong></td><td>HSET, HGET, HGETALL</td><td>Store embedding + metadata together</td></tr>
+<tr><td><strong>List</strong></td><td>LPUSH, RPOP, LRANGE</td><td>Chat history queues</td></tr>
+<tr><td><strong>Set</strong></td><td>SADD, SMEMBERS</td><td>Track processed document IDs</td></tr>
+<tr><td><strong>Sorted Set</strong></td><td>ZADD, ZRANGE</td><td>Rank documents by relevance score</td></tr>
+<tr><td><strong>Stream</strong></td><td>XADD, XREAD</td><td>Event streaming for AI pipelines</td></tr>
+</tbody>
+</table></div>
+
+<h2>Python — Connection</h2>
+<pre><code><span class="kw">import</span> redis
+
+<span class="cm"># Connect to Azure Managed Redis</span>
+r = redis.Redis(
+    host=<span class="str">"myredis.redis.cache.windows.net"</span>,
+    port=<span class="num">6380</span>,                   <span class="cm"># 6380 for SSL (not 6379)</span>
+    password=<span class="str">"&lt;access-key&gt;"</span>,
+    ssl=<span class="kw">True</span>,
+    ssl_cert_reqs=<span class="kw">None</span>,
+    decode_responses=<span class="kw">True</span>        <span class="cm"># auto-decode bytes to strings</span>
+)
+
+<span class="cm"># Test connection</span>
+print(r.ping())  <span class="cm"># True</span>
+<span class="lang-label">python</span></code></pre>
+</section>
+
+<section id="redis-caching">
+<h1>Redis — Caching Patterns, Expiration &amp; Invalidation <span class="stars"><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star off">&#9733;</span></span></h1>
+
+<h2>SET / GET with Expiration</h2>
+<pre><code><span class="kw">import</span> redis, json
+
+r = redis.Redis(host=<span class="str">"..."</span>, port=<span class="num">6380</span>, password=<span class="str">"..."</span>, ssl=<span class="kw">True</span>, decode_responses=<span class="kw">True</span>)
+
+<span class="cm"># SET with TTL (Time To Live)</span>
+r.set(<span class="str">"cache:response:abc123"</span>, json.dumps({<span class="str">"answer"</span>: <span class="str">"Azure is a cloud platform"</span>}), ex=<span class="num">3600</span>)
+<span class="cm"># ex=3600 → expire after 3600 seconds (1 hour)</span>
+<span class="cm"># px=60000 → expire after 60000 milliseconds</span>
+<span class="cm"># exat=1735689600 → expire at Unix timestamp</span>
+
+<span class="cm"># GET cached value</span>
+cached = r.get(<span class="str">"cache:response:abc123"</span>)
+<span class="kw">if</span> cached:
+    result = json.loads(cached)
+    print(<span class="str">"Cache HIT"</span>)
+<span class="kw">else</span>:
+    print(<span class="str">"Cache MISS — fetch from LLM"</span>)
+
+<span class="cm"># Check remaining TTL</span>
+ttl = r.ttl(<span class="str">"cache:response:abc123"</span>)   <span class="cm"># returns seconds; -1 = no expiry; -2 = key doesn't exist</span>
+print(f<span class="str">"TTL: {ttl}s"</span>)
+
+<span class="cm"># Update TTL on an existing key</span>
+r.expire(<span class="str">"cache:response:abc123"</span>, <span class="num">7200</span>)  <span class="cm"># extend to 2 hours</span>
+
+<span class="cm"># Remove TTL — make key permanent</span>
+r.persist(<span class="str">"cache:response:abc123"</span>)
+
+<span class="cm"># Delete key immediately (invalidate)</span>
+r.delete(<span class="str">"cache:response:abc123"</span>)
+<span class="lang-label">python</span></code></pre>
+
+<h2>Cache-Aside Pattern (Lazy Loading)</h2>
+<pre><code><span class="kw">import</span> hashlib, json
+
+<span class="kw">def</span> get_ai_response(prompt: str) -&gt; str:
+    <span class="str">"""Cache-aside: check cache first, hit LLM only on miss."""</span>
+
+    <span class="cm"># 1. Generate cache key from prompt hash</span>
+    cache_key = f<span class="str">"llm:response:{hashlib.md5(prompt.encode()).hexdigest()}"</span>
+
+    <span class="cm"># 2. Check cache</span>
+    cached = r.get(cache_key)
+    <span class="kw">if</span> cached:
+        <span class="kw">return</span> json.loads(cached)[<span class="str">"answer"</span>]
+
+    <span class="cm"># 3. Cache MISS — call LLM</span>
+    response = openai_client.chat.completions.create(
+        model=<span class="str">"gpt-4o"</span>,
+        messages=[{<span class="str">"role"</span>: <span class="str">"user"</span>, <span class="str">"content"</span>: prompt}]
+    )
+    answer = response.choices[<span class="num">0</span>].message.content
+
+    <span class="cm"># 4. Store in cache with 1-hour TTL</span>
+    r.set(cache_key, json.dumps({<span class="str">"answer"</span>: answer}), ex=<span class="num">3600</span>)
+
+    <span class="kw">return</span> answer
+<span class="lang-label">python</span></code></pre>
+
+<h2>Cache Invalidation Patterns</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>Pattern</th><th>How It Works</th><th>Use Case</th></tr></thead>
+<tbody>
+<tr><td><strong>TTL-based</strong></td><td>Key automatically expires after N seconds</td><td>LLM responses with acceptable staleness</td></tr>
+<tr><td><strong>Event-driven</strong></td><td>DELETE key when source data changes (e.g., via Change Feed)</td><td>Document cache invalidated on update</td></tr>
+<tr><td><strong>Key prefix invalidation</strong></td>
+  <td>Use SCAN + DELETE for pattern-based bulk invalidation</td><td>Invalidate all cache for a user/tenant</td></tr>
+<tr><td><strong>Version tagging</strong></td><td>Append version to key; old keys expire naturally</td><td>Model version changes</td></tr>
+</tbody>
+</table></div>
+
+<pre><code><span class="cm"># Pattern-based invalidation (invalidate all cache for user-123)</span>
+cursor = <span class="num">0</span>
+<span class="kw">while True</span>:
+    cursor, keys = r.scan(cursor, match=<span class="str">"cache:user:user-123:*"</span>, count=<span class="num">100</span>)
+    <span class="kw">if</span> keys:
+        r.delete(*keys)
+    <span class="kw">if</span> cursor == <span class="num">0</span>:
+        <span class="kw">break</span>
+<span class="lang-label">python</span></code></pre>
+
+<div class="callout warning">
+<div class="ct">&#9888; KEYS Command — Avoid in Production</div>
+Never use <code>KEYS *</code> in production — it blocks the entire Redis server while scanning. Always use <code>SCAN</code> with a cursor for pattern-based key enumeration. This is a common exam question about Redis best practices.
+</div>
+</section>
+
+<section id="redis-vector">
+<h1>Redis — Vector Indexing with RediSearch <span class="stars"><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star">&#9733;</span><span class="star off">&#9733;</span></span></h1>
+
+<h2>RediSearch Vector Index</h2>
+<p>Azure Managed Redis includes the RediSearch module, which adds full-text search and vector similarity search capabilities. Vectors are stored as Hash fields or JSON, and a HNSW or FLAT index enables fast KNN (K-Nearest Neighbor) queries.</p>
+
+<h2>Step 1 — Create a Vector Index</h2>
+<pre><code><span class="kw">from</span> redis.commands.search.field <span class="kw">import</span> VectorField, TextField, TagField
+<span class="kw">from</span> redis.commands.search.indexDefinition <span class="kw">import</span> IndexDefinition, IndexType
+
+<span class="cm"># Define the index schema</span>
+schema = [
+    TextField(<span class="str">"content"</span>),
+    TagField(<span class="str">"category"</span>),
+    VectorField(
+        <span class="str">"embedding"</span>,
+        <span class="str">"HNSW"</span>,                  <span class="cm"># HNSW or FLAT</span>
+        {
+            <span class="str">"TYPE"</span>: <span class="str">"FLOAT32"</span>,        <span class="cm"># FLOAT32 or FLOAT64</span>
+            <span class="str">"DIM"</span>: <span class="num">1536</span>,               <span class="cm"># embedding dimensions</span>
+            <span class="str">"DISTANCE_METRIC"</span>: <span class="str">"COSINE"</span>,  <span class="cm"># COSINE | L2 | IP</span>
+            <span class="str">"M"</span>: <span class="num">16</span>,                   <span class="cm"># HNSW: max connections per node</span>
+            <span class="str">"EF_CONSTRUCTION"</span>: <span class="num">200</span>    <span class="cm"># HNSW: build quality</span>
+        }
+    )
+]
+
+r.ft(<span class="str">"idx:documents"</span>).create_index(
+    fields=schema,
+    definition=IndexDefinition(prefix=[<span class="str">"doc:"</span>], index_type=IndexType.HASH)
+)
+<span class="lang-label">python</span></code></pre>
+
+<h2>Step 2 — Store Documents with Embeddings</h2>
+<pre><code><span class="kw">import</span> struct
+
+<span class="kw">def</span> embedding_to_bytes(embedding: list[float]) -&gt; bytes:
+    <span class="str">"""Convert float list to FLOAT32 bytes for Redis."""</span>
+    <span class="kw">return</span> struct.pack(f<span class="str">"{len(embedding)}f"</span>, *embedding)
+
+embedding = get_embedding(<span class="str">"Azure Cosmos DB global distribution"</span>)
+
+r.hset(<span class="str">"doc:001"</span>, mapping={
+    <span class="str">"content"</span>: <span class="str">"Azure Cosmos DB global distribution features..."</span>,
+    <span class="str">"category"</span>: <span class="str">"azure-docs"</span>,
+    <span class="str">"embedding"</span>: embedding_to_bytes(embedding)
+})
+<span class="lang-label">python</span></code></pre>
+
+<h2>Step 3 — KNN Vector Similarity Search</h2>
+<pre><code><span class="kw">from</span> redis.commands.search.query <span class="kw">import</span> Query
+
+query_embedding = get_embedding(<span class="str">"How does Cosmos DB distribute data globally?"</span>)
+query_bytes = embedding_to_bytes(query_embedding)
+
+<span class="cm"># KNN query: find top 5 nearest neighbors</span>
+<span class="cm"># *=>[KNN 5 @embedding $vec AS score] — find 5 nearest to $vec</span>
+q = Query(<span class="str">"*=>[KNN 5 @embedding $vec AS score]"</span>) \
+    .sort_by(<span class="str">"score"</span>) \
+    .return_fields(<span class="str">"content"</span>, <span class="str">"category"</span>, <span class="str">"score"</span>) \
+    .dialect(<span class="num">2</span>)
+
+results = r.ft(<span class="str">"idx:documents"</span>).search(
+    q,
+    query_params={<span class="str">"vec"</span>: query_bytes}
+)
+
+<span class="kw">for</span> doc <span class="kw">in</span> results.docs:
+    print(f<span class="str">"Score: {doc.score:.4f} | {doc.content[:80]}"</span>)
+<span class="lang-label">python</span></code></pre>
+
+<h2>Hybrid Search — Vector + Text Filter</h2>
+<pre><code><span class="cm"># Filter by category AND find nearest vectors</span>
+q = Query(<span class="str">"@category:{azure-docs}=>[KNN 5 @embedding $vec AS score]"</span>) \
+    .sort_by(<span class="str">"score"</span>) \
+    .return_fields(<span class="str">"content"</span>, <span class="str">"score"</span>) \
+    .dialect(<span class="num">2</span>)
+
+results = r.ft(<span class="str">"idx:documents"</span>).search(q, query_params={<span class="str">"vec"</span>: query_bytes})
+<span class="lang-label">python</span></code></pre>
+
+<div class="callout must-know">
+<div class="ct">&#9733; Redis Vector Search Key Facts</div>
+<ul>
+<li><strong>HNSW</strong> index type: better recall, good for query-heavy workloads</li>
+<li><strong>FLAT</strong> index type: exact (brute force) search, good for small datasets (&lt;1M vectors)</li>
+<li>Vectors stored as <strong>FLOAT32 bytes</strong> in Hash fields</li>
+<li>KNN query syntax: <code>*=>[KNN N @field $vec AS alias]</code></li>
+<li>Hybrid queries combine filter expressions with vector KNN: <code>@tag:{value}=>[KNN ...]</code></li>
+<li>Requires Redis dialect 2 (<code>.dialect(2)</code>)</li>
+<li>Azure Managed Redis includes RediSearch — Azure Cache for Redis Standard/Premium does NOT</li>
+</ul>
+</div>
+
+<div class="table-wrap"><table>
+<thead><tr><th>Feature</th><th>Azure Cache for Redis</th><th>Azure Managed Redis</th></tr></thead>
+<tbody>
+<tr><td>Engine</td><td>Open-source Redis</td><td>Redis Enterprise</td></tr>
+<tr><td>RediSearch (vector)</td><td>Premium tier only</td><td>Always included</td></tr>
+<tr><td>Active geo-replication</td><td>No</td><td>Yes</td></tr>
+<tr><td>Tiered storage</td><td>No</td><td>Yes (RAM + SSD)</td></tr>
+<tr><td>99.999% SLA</td><td>No</td><td>Yes (Enterprise Flash)</td></tr>
+</tbody>
+</table></div>
+</section>
+
+<section id="flashcards">
+<h1>Flashcards</h1>
+<p>Click any card to reveal the answer.</p>
+<div class="flashcard-grid" id="fcGrid"></div>
+</section>
+
+<section id="mcq">
+<h1>30-Question Practice Test</h1>
+<div class="score-box">Score: <span id="scoreCount">0</span> / <span id="scoreTotal">0</span> answered correctly</div>
+<div id="mcqContainer"></div>
+</section>
+
+<section id="cheatsheet">
+<h1>Final Revision Cheat Sheet</h1>
+<div class="cheat-grid">
+<div class="cheat-card"><h4>Cosmos DB — RUs</h4>
+<pre style="font-size:11px;padding:10px;margin:0"><code>Point read = 1 RU/KB (cheapest!)
+Write/Upsert = ~5-10 RU/KB
+Cross-partition query = 10-100+ RUs
+Modes: Provisioned | Autoscale | Serverless
+Strong/Bounded = 2x read RU cost
+Optimize: use point reads, exclude paths, projections</code></pre></div>
+<div class="cheat-card"><h4>Cosmos DB — Consistency</h4>
+<pre style="font-size:11px;padding:10px;margin:0"><code>Strong → Bounded → Session → Prefix → Eventual
+Strong = most consistent, highest cost
+Session = default, read-your-own-writes
+Eventual = lowest latency, lowest cost
+Can only WEAKEN per-request (not strengthen)</code></pre></div>
+<div class="cheat-card"><h4>Cosmos DB — Vector Search</h4>
+<pre style="font-size:11px;padding:10px;margin:0"><code>VectorDistance(c.embedding, @query)
+distanceFunction: cosine | dotproduct | euclidean
+indexType: diskANN
+EXCLUDE /embedding/* from B-tree index
+ADD /embedding to vectorIndexes
+Lower score = more similar (distance)</code></pre></div>
+<div class="cheat-card"><h4>Cosmos DB — Change Feed</h4>
+<pre style="font-size:11px;padding:10px;margin:0"><code>Captures: inserts + updates (NOT deletes)
+Requires lease container for checkpointing
+processorName = independent view of feed
+instanceName = load sharing within processor
+.WithStartTime() = start from specific time</code></pre></div>
+<div class="cheat-card"><h4>PostgreSQL — pgvector</h4>
+<pre style="font-size:11px;padding:10px;margin:0"><code>CREATE EXTENSION vector;
+vector(1536) for OpenAI embeddings
+&lt;=&gt; cosine | &lt;-&gt; L2 | &lt;#&gt; inner product
+IVFFlat: lists param, ivfflat.probes at query
+HNSW: m + ef_construction, hnsw.ef_search
+Use vector_cosine_ops with &lt;=&gt; operator</code></pre></div>
+<div class="cheat-card"><h4>PostgreSQL — Connection</h4>
+<pre style="font-size:11px;padding:10px;margin:0"><code>Direct: port 5432, sslmode=require
+PgBouncer: port 6432 (built-in pooler)
+Modes: Transaction (default) | Session | Statement
+Transaction mode = highest connection density
+asyncpg for async Python workloads
+Memory Optimized tier for HNSW indexes</code></pre></div>
+<div class="cheat-card"><h4>Redis — Caching</h4>
+<pre style="font-size:11px;padding:10px;margin:0"><code>SET key value EX 3600 (expire in seconds)
+EXPIRE key seconds (update TTL)
+TTL key (check remaining; -1=no expiry; -2=gone)
+PERSIST key (remove TTL)
+DELETE key (invalidate immediately)
+SCAN not KEYS (KEYS blocks server!)</code></pre></div>
+<div class="cheat-card"><h4>Redis — Vector Search</h4>
+<pre style="font-size:11px;padding:10px;margin:0"><code>Index types: HNSW (better recall) | FLAT (exact)
+VectorField: TYPE=FLOAT32, DIM=1536, DISTANCE_METRIC=COSINE
+Store: embedding_to_bytes() as FLOAT32
+KNN: "*=>[KNN 5 @embedding $vec AS score]"
+Hybrid: "@category:{tag}=>[KNN 5 @embedding $vec]"
+Requires .dialect(2)
+Azure Managed Redis includes RediSearch</code></pre></div>
+</div>
+</section>
+
+<section id="glossary">
+<h1>Glossary</h1>
+<div id="glossaryContainer"></div>
+</section>
+
+<section id="tips">
+<h1>Last-Minute Exam Tips</h1>
+<ol>
+<li><strong>Point reads are cheapest in Cosmos DB.</strong> ReadItemAsync with id + partition key = 1 RU/KB. Always prefer over queries when you know the ID.</li>
+<li><strong>Session consistency is the default.</strong> Strong and Bounded Staleness double read RU costs. You can only weaken consistency per-request, never strengthen beyond account level.</li>
+<li><strong>Composite indexes are required for multi-field ORDER BY.</strong> Without them the query fails — it doesn't fall back.</li>
+<li><strong>Exclude embedding paths from B-tree indexing.</strong> Add them to <code>vectorIndexes</code> instead. Don't index large arrays in the regular index.</li>
+<li><strong>Change feed captures inserts and updates, NOT deletes.</strong></li>
+<li><strong>Lease container is required for Change Feed Processor.</strong> It stores checkpoints so the processor can resume after restart.</li>
+<li><strong>CosmosClient should be a singleton.</strong> Creating per-request wastes TCP connections and costs extra RUs.</li>
+<li><strong>pgvector operator for OpenAI embeddings = &lt;=&gt; (cosine).</strong> The index must use <code>vector_cosine_ops</code> to match.</li>
+<li><strong>HNSW needs more RAM than IVFFlat.</strong> Use Memory Optimized PostgreSQL tier for HNSW indexes on large datasets.</li>
+<li><strong>PgBouncer port = 6432</strong> (not 5432). Transaction pooling mode is the default and best for most AI workloads.</li>
+<li><strong>Redis: use SCAN, never KEYS.</strong> KEYS blocks the entire server on large datasets.</li>
+<li><strong>Redis vector requires FLOAT32 bytes.</strong> Use struct.pack or numpy to convert float lists before storing.</li>
+<li><strong>Azure Managed Redis includes RediSearch.</strong> Azure Cache for Redis Standard/Premium does NOT have it by default.</li>
+<li><strong>IVFFlat: insert data before building the index.</strong> More efficient than building on an empty table.</li>
+<li><strong>VectorDistance() in Cosmos DB: lower = more similar</strong> (it returns a distance, not a similarity score).</li>
+</ol>
+</section>
+
+</div><!-- /content -->
+</div><!-- /main -->
+
+<script>
+const flashcards=[
+  {q:"What is the cheapest Cosmos DB operation by RU cost?",a:"Point read (ReadItemAsync with id + partition key): 1 RU per 1 KB. Always prefer over queries when you know the document ID."},
+  {q:"Which Cosmos DB consistency level is the default?",a:"Session. It provides read-your-own-writes consistency within a single client session. Strong and Bounded Staleness cost 2x RUs for reads."},
+  {q:"Can you strengthen Cosmos DB consistency per-request beyond the account level?",a:"NO. You can only WEAKEN per-request. If the account is set to Session, you can request Eventual, but not Strong."},
+  {q:"What Cosmos DB indexing policy change saves the most write RUs for AI workloads?",a:"Exclude the embedding array path (/embedding/*) from the B-tree index and add it to vectorIndexes with type diskANN."},
+  {q:"Does the Cosmos DB change feed capture deletes?",a:"NO — by default it captures only inserts and updates. Use soft-delete patterns (mark items as deleted) to capture deletions."},
+  {q:"What is the lease container used for in the Change Feed Processor?",a:"It stores checkpointing state — which changes have been processed. This allows the processor to resume from where it left off after a restart."},
+  {q:"What does VectorDistance() return in Cosmos DB?",a:"A distance value (lower = more similar). For cosine: 0 means identical, 1 means completely dissimilar. It is NOT a similarity score."},
+  {q:"Which Cosmos DB throughput mode has no minimum cost when idle?",a:"Serverless. You pay only for RUs consumed. Provisioned requires you to reserve (and pay for) RUs whether used or not."},
+  {q:"When is a composite index REQUIRED in Cosmos DB?",a:"When using ORDER BY on multiple fields. Without a composite index covering those fields and directions, the query fails with an error."},
+  {q:"What is the pgvector operator for cosine distance?",a:"<=> (cosine distance). Use with vector_cosine_ops index operator class. Lower value = more similar."},
+  {q:"IVFFlat vs HNSW: which has better recall?",a:"HNSW has better recall quality. IVFFlat is faster to build and uses less memory. HNSW requires more RAM (suitable for Memory Optimized tier)."},
+  {q:"What PostgreSQL parameter controls IVFFlat search quality at query time?",a:"ivfflat.probes — higher value = better recall, slower query. Recommended: probes = lists / 10."},
+  {q:"What is the PgBouncer port on Azure Database for PostgreSQL?",a:"6432 (PgBouncer). Direct PostgreSQL port is 5432. Transaction pooling mode is the default."},
+  {q:"Which PostgreSQL connection pooling mode returns the connection after each transaction?",a:"Transaction mode — the most efficient. Session mode holds the connection for the full client session."},
+  {q:"What Redis command should NEVER be used in production for pattern matching?",a:"KEYS * — it blocks the entire Redis server while scanning. Use SCAN with a cursor for safe pattern-based enumeration."},
+  {q:"How are embeddings stored in Redis for vector search?",a:"As FLOAT32 bytes in a Hash field. Use struct.pack() or numpy to convert float lists to the binary format Redis expects."},
+  {q:"What is the KNN query syntax in RediSearch?",a:"*=>[KNN N @fieldname $param AS alias]. Example: *=>[KNN 5 @embedding $vec AS score]. Requires dialect 2."},
+  {q:"Does Azure Cache for Redis Standard include RediSearch for vector search?",a:"NO. Azure Managed Redis (Redis Enterprise) always includes RediSearch. Azure Cache for Redis Standard/Basic does not."},
+  {q:"What CosmosClient pattern is required for production performance?",a:"Singleton — create CosmosClient once per application lifetime. It's expensive to initialize (TCP connections, DNS). Register as DI singleton."},
+  {q:"For a RAG pattern on PostgreSQL, what are the 4 steps?",a:"1. Embed the user query. 2. Retrieve similar chunks with ORDER BY embedding <=> query LIMIT K. 3. Build context from chunks. 4. Generate answer with LLM using context."},
+];
+
+const fcGrid=document.getElementById('fcGrid');
+flashcards.forEach(fc=>{
+  const d=document.createElement('div');d.className='flashcard';
+  d.innerHTML=`<div class="front">${fc.q}</div><div class="back">${fc.a}</div>`;
+  d.querySelector('.back').style.display='none';
+  d.addEventListener('click',()=>{const b=d.querySelector('.back');b.style.display=b.style.display==='none'?'block':'none';});
+  fcGrid.appendChild(d);
+});
+
+const questions=[
+  {q:"A developer reads a 2 KB item by its id and partition key in Cosmos DB. What is the approximate RU cost?",opts:["0.5 RU","2 RU","10 RU","20 RU"],ans:1,exp:"Point reads cost 1 RU per 1 KB. A 2 KB item costs approximately 2 RUs — the cheapest operation in Cosmos DB."},
+  {q:"A Cosmos DB query uses ORDER BY on two fields: createdAt ASC, userId DESC. The query fails with an error. What is missing?",opts:["A partition key on createdAt","A composite index covering both fields in order","A consistency level override","An excluded path for createdAt"],ans:1,exp:"Cosmos DB requires a composite index for ORDER BY on multiple fields. Without it, the query fails — there is no automatic fallback."},
+  {q:"Which Cosmos DB consistency level provides read-your-own-writes within a session while having normal RU cost?",opts:["Strong","Bounded Staleness","Session","Eventual"],ans:2,exp:"Session consistency is the default. It guarantees read-your-own-writes within a session and costs normal RUs (unlike Strong/Bounded which cost 2x)."},
+  {q:"A team wants to minimize write RU costs when storing documents with 1536-dimensional embedding arrays. What should they do?",opts:["Set indexingMode to lazy","Add /embedding/* to excludedPaths and add it to vectorIndexes","Delete all indexes","Use serverless throughput"],ans:1,exp:"Excluding large embedding arrays from the B-tree index saves significant write RUs. The embedding is added to vectorIndexes for vector search instead."},
+  {q:"What does the Cosmos DB change feed capture by default?",opts:["Inserts, updates, and deletes","Inserts and updates only","Updates and deletes only","Inserts only"],ans:1,exp:"The change feed captures inserts and updates only. Deletes require a soft-delete pattern (mark items deleted, never physically delete them)."},
+  {q:"A change feed processor stops and restarts after an hour of downtime. What happens to unprocessed changes?",opts:["They are permanently lost","Processing resumes from the last checkpoint stored in the lease container","Processing restarts from the beginning","An error is thrown"],ans:1,exp:"The lease container stores the checkpoint (position in the feed). The processor resumes from the last checkpoint automatically — no changes are lost."},
+  {q:"A team uses Cosmos DB Serverless. The application runs 100 hours per month with low traffic. What is the minimum monthly cost?",opts:["$0","400 RU/s × 730 hours","$24 (1000 RU/s autoscale minimum)","Pay only for RUs consumed"],ans:3,exp:"Serverless = pay per RU consumed, no minimum reservation. When idle, cost is $0."},
+  {q:"A Cosmos DB account is set to Session consistency. A specific read request needs Strong consistency. Is this possible?",opts:["Yes, override to Strong at request level","No, you cannot exceed the account-level consistency","Yes, set Strong in CosmosClientOptions","Yes, use a separate client with Strong consistency"],ans:1,exp:"You can only WEAKEN consistency per-request. Strengthening beyond the account-level setting is not possible."},
+  {q:"Which VectorDistance() result in Cosmos DB indicates the most similar document?",opts:["The highest value","The value closest to 1","The lowest value (closest to 0)","Any value above 0.5"],ans:2,exp:"VectorDistance returns a DISTANCE, not similarity. Lower = more similar. For cosine: 0 = identical, 1 = completely different."},
+  {q:"A Python developer needs to connect to Cosmos DB without storing a password in code. What approach should be used?",opts:["Store the connection string in app settings","Use DefaultAzureCredential() with CosmosClient","Hash the password with SHA256","Use the admin account"],ans:1,exp:"DefaultAzureCredential() enables Managed Identity and credential chain authentication — no passwords stored in code."},
+  {q:"Which pgvector operator should be used for OpenAI text-embedding-ada-002 embeddings?",opts:["<-> (L2 distance)","<=> (cosine distance)","<#> (inner product)","= (equality)"],ans:1,exp:"OpenAI text embeddings use cosine similarity. The <=> operator computes cosine distance. Use with vector_cosine_ops index operator."},
+  {q:"A PostgreSQL table has 5 million document chunks. The team wants the best recall for vector search. Which index type is recommended?",opts:["IVFFlat with lists=1000","HNSW with m=16, ef_construction=64","B-tree on embedding column","GIN index on embedding"],ans:1,exp:"HNSW provides better recall quality than IVFFlat. It uses a graph structure for approximate nearest-neighbor search with higher accuracy."},
+  {q:"What PostgreSQL session setting improves IVFFlat recall at query time?",opts:["hnsw.ef_search","maintenance_work_mem","ivfflat.probes","max_parallel_workers"],ans:2,exp:"ivfflat.probes controls how many clusters to search. Higher value = better recall, slower query. Default is 1."},
+  {q:"What is the port number for PgBouncer connection pooling on Azure Database for PostgreSQL?",opts:["5432","6432","1433","3306"],ans:1,exp:"PgBouncer runs on port 6432. Direct PostgreSQL connections use port 5432."},
+  {q:"A web app makes thousands of short database transactions per second to PostgreSQL. Which PgBouncer mode is best?",opts:["Session mode","Transaction mode","Statement mode","Direct mode"],ans:1,exp:"Transaction mode returns connections to the pool after each transaction — highest connection density and most efficient for high-throughput workloads."},
+  {q:"Which PostgreSQL compute tier is recommended for large HNSW vector indexes?",opts:["Burstable","General Purpose","Memory Optimized","Standard SSD"],ans:2,exp:"HNSW loads the entire index into RAM. Memory Optimized provides 2x RAM per vCore, ideal for large in-memory indexes."},
+  {q:"A Redis operation uses KEYS * to find all keys matching a pattern in production. What is the risk?",opts:["It returns incorrect results","It permanently deletes matching keys","It blocks the Redis server for the duration of the scan","It requires admin authentication"],ans:2,exp:"KEYS * blocks the entire Redis server while scanning all keys. Use SCAN with a cursor for safe, non-blocking pattern enumeration."},
+  {q:"How should a float list embedding be stored in Redis for vector search?",opts:["As a JSON string","As a comma-separated string","As FLOAT32 binary bytes using struct.pack()","As a base64-encoded string"],ans:2,exp:"Redis vector search requires embeddings as FLOAT32 binary bytes. Use struct.pack(f'{len(embedding)}f', *embedding) to convert."},
+  {q:"Which Redis index type provides exact (brute force) vector search suitable for small datasets?",opts:["HNSW","IVFFlat","FLAT","B-tree"],ans:2,exp:"FLAT performs exact exhaustive search — best for small datasets (<1M vectors). HNSW is approximate but much faster for large datasets."},
+  {q:"A team wants to build a hybrid Redis search combining text filter and vector KNN. Which query format is correct?",opts:["SELECT * ORDER BY KNN","*=>[KNN 5 @embedding $vec]","@category:{azure-docs}=>[KNN 5 @embedding $vec AS score]","SEARCH @category azure-docs KNN 5"],ans:2,exp:"Hybrid queries prepend a filter expression: @tag:{value}=>[KNN N @field $param AS alias]. Both filter and vector constraints are applied together."},
+  {q:"What does setting ex=3600 do in r.set('key', 'value', ex=3600)?",opts:["Sets the key to expire after 3600 milliseconds","Sets the key to expire after 3600 seconds","Retries the SET command 3600 times","Sets the key's version to 3600"],ans:1,exp:"ex=3600 sets a TTL of 3600 SECONDS (1 hour). Use px for milliseconds."},
+  {q:"Which Azure service includes RediSearch for vector indexing without additional configuration?",opts:["Azure Cache for Redis Basic","Azure Cache for Redis Standard","Azure Cache for Redis Premium","Azure Managed Redis"],ans:3,exp:"Azure Managed Redis (Redis Enterprise) always includes RediSearch. Azure Cache for Redis tiers use open-source Redis which requires manual module installation."},
+  {q:"A team needs to invalidate all Redis cache keys for user 'user-123'. Which approach is safe in production?",opts:["KEYS cache:user:user-123:*","DEL cache:user:user-123:*","SCAN + DELETE in batches using cursor","FLUSHDB"],ans:2,exp:"SCAN iterates keys non-blockingly using a cursor. KEYS blocks the server. FLUSHDB deletes everything. Scan + batch delete is the safe production approach."},
+  {q:"What is the pgvector index operator class for cosine distance?",opts:["vector_l2_ops","vector_ip_ops","vector_cosine_ops","vector_hnsw_ops"],ans:2,exp:"vector_cosine_ops is used with USING ivfflat or USING hnsw for the <=> cosine distance operator."},
+  {q:"A Cosmos DB CosmosClient is created inside every API request handler. What problem does this cause?",opts:["Incorrect query results","Higher consistency costs","Wasted TCP connections and increased RU costs per request","Data loss on concurrent writes"],ans:2,exp:"CosmosClient should be a singleton. Creating it per-request wastes TCP connection setup time and adds overhead. Create once and reuse across all requests."},
+  {q:"For the RAG pattern in PostgreSQL, what is the purpose of the ORDER BY embedding <=> query_vector clause?",opts:["Sort documents alphabetically","Find documents with matching category","Rank documents by semantic similarity to the query","Order by creation date"],ans:2,exp:"ORDER BY <=> ranks by cosine distance to the query vector — documents most semantically similar to the query come first. Combined with LIMIT K to retrieve top-K results."},
+  {q:"An IVFFlat index has lists=100. What is the recommended value for ivfflat.probes to balance recall and performance?",opts:["1","10","100","1000"],ans:1,exp:"Recommended probes = lists / 10. So for lists=100, use probes=10. Higher improves recall but increases query time."},
+  {q:"What happens if you try to build an HNSW index on a vector column with 3000 dimensions?",opts:["The index builds but queries are slower","The index is created with automatic dimension reduction","The index creation fails — max supported dimensions is 2000","The index builds but uses L2 distance only"],ans:2,exp:"Both IVFFlat and HNSW support a maximum of 2000 dimensions. Attempting to index higher-dimensional vectors results in an error."},
+  {q:"What is the minimum provisioned throughput for a Cosmos DB container?",opts:["100 RU/s","400 RU/s","1000 RU/s","4000 RU/s"],ans:1,exp:"The minimum provisioned throughput for a Cosmos DB container is 400 RU/s. For autoscale, the minimum max is 1000 RU/s (autoscaling down to 100 RU/s)."},
+  {q:"A team enables Azure Managed Redis HNSW vector index with DIM=1536 and DISTANCE_METRIC=COSINE. They then query using FT.SEARCH. What dialect version is required?",opts:["Dialect 1 (default)","Dialect 2","Dialect 3","No dialect specification needed"],ans:1,exp:"Vector search queries in RediSearch require .dialect(2). Without it, the KNN query syntax is not recognized."},
+];
+
+let score=0,answered=0;
+const mcqContainer=document.getElementById('mcqContainer');
+const scoreCount=document.getElementById('scoreCount');
+const scoreTotal=document.getElementById('scoreTotal');
+
+questions.forEach((q,i)=>{
+  const div=document.createElement('div');div.className='mcq';
+  const optHTML=q.opts.map((o,j)=>`<li data-idx="${j}" data-q="${i}">${String.fromCharCode(65+j)}. ${o}</li>`).join('');
+  div.innerHTML=`<div class="question">Q${i+1}. ${q.q}</div><ul class="options">${optHTML}</ul><button class="reveal-btn" data-q="${i}">Reveal Answer</button><div class="answer-box" id="ans${i}"><strong>Answer: ${String.fromCharCode(65+q.ans)} — ${q.opts[q.ans]}</strong><br><br>${q.exp}</div>`;
+  mcqContainer.appendChild(div);
+});
+
+document.getElementById('mcqContainer').addEventListener('click',e=>{
+  if(e.target.tagName==='LI'){
+    const qIdx=parseInt(e.target.dataset.q),oIdx=parseInt(e.target.dataset.idx);
+    const ul=e.target.parentElement;
+    if(ul.dataset.done)return;
+    ul.dataset.done='1';answered++;
+    if(oIdx===questions[qIdx].ans){e.target.classList.add('correct');score++;}
+    else{e.target.style.background='#fee2e2';e.target.style.borderColor='#dc2626';ul.children[questions[qIdx].ans].classList.add('correct');}
+    scoreCount.textContent=score;scoreTotal.textContent=answered;
+    document.getElementById(`ans${qIdx}`).classList.add('show');
+  }
+  if(e.target.classList.contains('reveal-btn')){
+    document.getElementById(`ans${parseInt(e.target.dataset.q)}`).classList.add('show');
+  }
+});
+
+const glossary=[
+  ["Change Feed","Cosmos DB ordered log of inserts and updates; excludes deletes by default"],
+  ["Composite Index","Cosmos DB index required for ORDER BY on multiple fields"],
+  ["Consistency Level","Cosmos DB tradeoff between data freshness and performance (5 levels)"],
+  ["DiskANN","Disk-based approximate nearest-neighbor algorithm used by Cosmos DB vector index"],
+  ["FLAT index","Redis exact (brute force) vector search; best for small datasets"],
+  ["HNSW","Hierarchical Navigable Small World; graph-based ANN index in pgvector and Redis"],
+  ["IVFFlat","Inverted File with Flat quantization; pgvector ANN index using cluster-based search"],
+  ["KNN","K-Nearest Neighbors; the query pattern for finding K most similar vectors"],
+  ["Lease Container","Cosmos DB container that stores change feed processor checkpoint state"],
+  ["Managed Identity","Azure AD identity for services; enables credential-free access to Cosmos DB"],
+  ["PgBouncer","PostgreSQL connection pooler built into Azure Flexible Server; listens on port 6432"],
+  ["pgvector","PostgreSQL extension adding vector data type and similarity operators"],
+  ["Partition Key","Cosmos DB property used to distribute items across physical partitions"],
+  ["Point Read","Cosmos DB operation using id + partition key; cheapest at 1 RU/KB"],
+  ["RAG","Retrieval-Augmented Generation; pattern combining vector search with LLM generation"],
+  ["RediSearch","Redis module enabling full-text and vector similarity search"],
+  ["Request Unit","Cosmos DB normalized currency for operation cost (CPU + memory + I/O)"],
+  ["Serverless","Cosmos DB throughput mode with no minimum cost; pay per RU consumed"],
+  ["Session Consistency","Cosmos DB default consistency; read-your-own-writes within a session"],
+  ["TTL","Time To Live; duration after which a Redis key automatically expires"],
+  ["VectorDistance()","Cosmos DB SQL function computing distance between two embedding vectors"],
+  ["vector_cosine_ops","pgvector operator class for cosine distance index (use with <=> operator)"],
+];
+
+const gc=document.getElementById('glossaryContainer');
+const tw=document.createElement('div');tw.className='table-wrap';
+const t=document.createElement('table');
+t.innerHTML='<thead><tr><th>Term</th><th>Definition</th></tr></thead>';
+const tb=document.createElement('tbody');
+glossary.forEach(([term,def])=>{
+  const tr=document.createElement('tr');
+  tr.innerHTML=`<td><code>${term}</code></td><td>${def}</td>`;
+  tb.appendChild(tr);
+});
+t.appendChild(tb);tw.appendChild(t);gc.appendChild(tw);
+
+const sections=document.querySelectorAll('section[id]');
+const navLinks=document.querySelectorAll('#sidebar nav a');
+const observer=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      navLinks.forEach(l=>l.classList.remove('active'));
+      const link=document.querySelector(`#sidebar a[href="#${e.target.id}"]`);
+      if(link)link.classList.add('active');
+    }
+  });
+},{threshold:0.25});
+sections.forEach(s=>observer.observe(s));
+
+window.addEventListener('scroll',()=>{
+  const scrolled=window.scrollY;
+  const total=document.documentElement.scrollHeight-window.innerHeight;
+  document.getElementById('progressFill').style.width=(scrolled/total*100)+'%';
+});
+</script>
+</body>
+</html>
