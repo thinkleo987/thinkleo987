@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Azure & Cloud Architecture Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #080B14;
+    --bg-elevated: #0F1526;
+    --bg-card: #121a30;
+    --azure: #2D7FF9;
+    --azure-dim: #1c4f9c;
+    --cyan: #00D9C0;
+    --amber: #FFB454;
+    --text: #E8ECF4;
+    --text-muted: #8291AD;
+    --line: rgba(140,160,200,0.14);
+    --radius: 10px;
+  }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html{ scroll-behavior:smooth; }
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Inter', sans-serif;
+    line-height:1.6;
+    overflow-x:hidden;
+  }
+  ::selection{ background:var(--azure); color:#fff; }
+  h1,h2,h3,h4{ font-family:'Space Grotesk', sans-serif; font-weight:600; letter-spacing:-0.01em; }
+  a{ color:inherit; text-decoration:none; }
+  .mono{ font-family:'JetBrains Mono', monospace; }
+
+  /* ---------- Nav ---------- */
+  header{
+    position:fixed; top:0; left:0; right:0; z-index:100;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:20px 40px;
+    background:linear-gradient(to bottom, rgba(8,11,20,0.9), transparent);
+    backdrop-filter:blur(2px);
+  }
+  .brand{ display:flex; align-items:center; gap:10px; font-size:15px; font-weight:600; }
+  .brand-dot{ width:8px; height:8px; border-radius:50%; background:var(--cyan); box-shadow:0 0 12px var(--cyan); }
+  nav ul{ list-style:none; display:flex; gap:28px; }
+  nav a{ font-size:13px; color:var(--text-muted); transition:color .2s; }
+  nav a:hover{ color:var(--text); }
+
+  /* ---------- Hero ---------- */
+  .hero{ position:relative; height:100vh; min-height:640px; display:flex; align-items:center; overflow:hidden; }
+  #hub-canvas{ position:absolute; inset:0; width:100%; height:100%; cursor:grab; }
+  #hub-canvas:active{ cursor:grabbing; }
+  .hero-content{
+    position:relative; z-index:5; max-width:640px; padding:0 8vw;
+    pointer-events:none;
+  }
+  .eyebrow{
+    font-family:'JetBrains Mono', monospace; font-size:12px; letter-spacing:0.14em;
+    color:var(--cyan); text-transform:uppercase; margin-bottom:18px; display:block;
+  }
+  .hero h1{ font-size:clamp(38px, 5.4vw, 64px); line-height:1.04; margin-bottom:20px; }
+  .hero h1 .accent{ color:var(--azure); }
+  .hero p{ color:var(--text-muted); font-size:17px; max-width:480px; margin-bottom:8px; }
+  .hero-hint{
+    font-family:'JetBrains Mono', monospace; font-size:11.5px; color:var(--text-muted);
+    margin-top:28px; display:flex; align-items:center; gap:8px; opacity:.7;
+  }
+  .node-tooltip{
+    position:absolute; z-index:6; pointer-events:none;
+    background:var(--bg-elevated); border:1px solid var(--line); border-radius:6px;
+    padding:6px 12px; font-family:'JetBrains Mono', monospace; font-size:12px;
+    color:var(--text); white-space:nowrap; transform:translate(-50%,-140%);
+    opacity:0; transition:opacity .15s; box-shadow:0 8px 24px rgba(0,0,0,0.4);
+  }
+  .scroll-cue{
+    position:absolute; bottom:36px; left:50%; transform:translateX(-50%); z-index:5;
+    display:flex; flex-direction:column; align-items:center; gap:8px;
+    font-family:'JetBrains Mono', monospace; font-size:11px; color:var(--text-muted);
+  }
+  .scroll-cue .line{ width:1px; height:30px; background:linear-gradient(var(--azure), transparent); animation:pulse-line 1.8s ease-in-out infinite; }
+  @keyframes pulse-line{ 0%,100%{opacity:.3;} 50%{opacity:1;} }
+
+  /* ---------- Sections shared ---------- */
+  section{ padding:110px 8vw; position:relative; }
+  .section-head{ max-width:640px; margin-bottom:56px; }
+  .section-num{ font-family:'JetBrains Mono', monospace; font-size:12px; color:var(--azure); margin-bottom:14px; display:block; }
+  .section-head h2{ font-size:clamp(28px,3.2vw,40px); margin-bottom:14px; }
+  .section-head p{ color:var(--text-muted); font-size:16px; }
+
+  /* ---------- Overview ---------- */
+  .overview{ background:var(--bg-elevated); border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
+  .overview-grid{ display:grid; grid-template-columns:1.1fr 0.9fr; gap:60px; align-items:start; }
+  .overview p{ color:var(--text-muted); font-size:16.5px; margin-bottom:16px; max-width:520px; }
+  .stat-list{ display:grid; grid-template-columns:1fr 1fr; gap:24px; }
+  .stat{ border-left:2px solid var(--azure); padding-left:16px; }
+  .stat .num{ font-family:'Space Grotesk',sans-serif; font-size:32px; font-weight:600; color:var(--text); }
+  .stat .label{ font-size:12.5px; color:var(--text-muted); margin-top:4px; }
+
+  /* ---------- Topics ---------- */
+  .topic-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:var(--line); border:1px solid var(--line); border-radius:var(--radius); overflow:hidden; }
+  .topic-card{ background:var(--bg-card); padding:32px 26px; transition:background .2s; }
+  .topic-card:hover{ background:#161f3a; }
+  .topic-card .glyph{ width:34px; height:34px; margin-bottom:20px; }
+  .topic-card h3{ font-size:17px; margin-bottom:12px; }
+  .topic-card ul{ list-style:none; }
+  .topic-card li{ font-size:13.5px; color:var(--text-muted); padding:4px 0; position:relative; padding-left:14px; }
+  .topic-card li::before{ content:"—"; position:absolute; left:0; color:var(--azure); }
+
+  /* ---------- Projects ---------- */
+  .projects{ background:var(--bg-elevated); border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
+  .project-list{ display:flex; flex-direction:column; }
+  .project-row{
+    display:grid; grid-template-columns:60px 1fr 280px 90px; gap:24px; align-items:center;
+    padding:26px 8px; border-bottom:1px solid var(--line); transition:background .2s;
+  }
+  .project-row:hover{ background:rgba(45,127,249,0.05); }
+  .project-row .idx{ font-family:'JetBrains Mono', monospace; color:var(--azure-dim); font-size:13px; }
+  .project-row h4{ font-size:17px; margin-bottom:6px; }
+  .project-row .desc{ font-size:13.5px; color:var(--text-muted); max-width:560px; }
+  .project-row .tag-group{ display:flex; flex-wrap:wrap; gap:6px; }
+  .tag{ font-family:'JetBrains Mono', monospace; font-size:10.5px; padding:3px 8px; border:1px solid var(--line); border-radius:20px; color:var(--text-muted); }
+  .project-row .go{ font-family:'JetBrains Mono', monospace; font-size:12px; color:var(--cyan); justify-self:end; white-space:nowrap; }
+  .project-row .go::after{ content:"→"; margin-left:6px; transition:margin .2s; }
+  .project-row:hover .go::after{ margin-left:10px; }
+
+  /* ---------- Stack ---------- */
+  .stack-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:32px; }
+  .stack-col .stack-title{ font-family:'JetBrains Mono', monospace; font-size:11.5px; color:var(--amber); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:16px; }
+  .stack-col .chip{ display:inline-block; font-size:13px; color:var(--text); background:var(--bg-card); border:1px solid var(--line); border-radius:6px; padding:6px 10px; margin:0 6px 6px 0; }
+
+  /* ---------- Getting started (real sequence -> numbered) ---------- */
+  .steps{ background:var(--bg-elevated); border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
+  .step-list{ position:relative; padding-left:50px; }
+  .step-list::before{ content:""; position:absolute; left:14px; top:8px; bottom:8px; width:1px; background:var(--line); }
+  .step{ position:relative; padding-bottom:48px; }
+  .step:last-child{ padding-bottom:0; }
+  .step-marker{
+    position:absolute; left:-50px; top:0; width:30px; height:30px; border-radius:50%;
+    background:var(--bg); border:1px solid var(--azure); display:flex; align-items:center; justify-content:center;
+    font-family:'JetBrains Mono', monospace; font-size:12px; color:var(--azure);
+  }
+  .step h4{ font-size:16.5px; margin-bottom:8px; }
+  .step p{ color:var(--text-muted); font-size:14.5px; max-width:560px; }
+
+  /* ---------- Pillars ---------- */
+  .pillar-row{ display:grid; grid-template-columns:repeat(5,1fr); gap:1px; background:var(--line); border-radius:var(--radius); overflow:hidden; border:1px solid var(--line); }
+  .pillar{ background:var(--bg-card); padding:26px 20px; text-align:left; }
+  .pillar .p-label{ font-family:'JetBrains Mono', monospace; font-size:11px; color:var(--cyan); margin-bottom:10px; }
+  .pillar h4{ font-size:14.5px; margin-bottom:8px; }
+  .pillar p{ font-size:12.5px; color:var(--text-muted); }
+
+  /* ---------- Footer ---------- */
+  footer{ padding:60px 8vw 40px; border-top:1px solid var(--line); }
+  .footer-grid{ display:flex; justify-content:space-between; flex-wrap:wrap; gap:32px; margin-bottom:40px; }
+  .footer-links{ display:flex; gap:40px; flex-wrap:wrap; }
+  .footer-col .ft-title{ font-family:'JetBrains Mono', monospace; font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:14px; }
+  .footer-col a{ display:block; font-size:13.5px; color:var(--text); padding:4px 0; opacity:.85; }
+  .footer-col a:hover{ color:var(--azure); opacity:1; }
+  .footer-bottom{ display:flex; justify-content:space-between; font-size:12px; color:var(--text-muted); flex-wrap:wrap; gap:12px; }
+
+  @media (max-width: 900px){
+    .overview-grid{ grid-template-columns:1fr; }
+    .topic-grid{ grid-template-columns:1fr 1fr; }
+    .stack-grid{ grid-template-columns:1fr 1fr; }
+    .pillar-row{ grid-template-columns:1fr 1fr; }
+    .project-row{ grid-template-columns:1fr; gap:8px; }
+    .project-row .go{ justify-self:start; }
+    section{ padding:80px 6vw; }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .scroll-cue .line{ animation:none; }
+    html{ scroll-behavior:auto; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand"><span class="brand-dot"></span> thinkleo987 / azure-hub</div>
+  <nav>
+    <ul>
+      <li><a href="#projects">Projects</a></li>
+      <li><a href="#stack">Stack</a></li>
+      <li><a href="#start">Start here</a></li>
+      <li><a href="https://github.com/thinkleo987" target="_blank" rel="noopener">GitHub</a></li>
+    </ul>
+  </nav>
+</header>
+
+<section class="hero">
+  <canvas id="hub-canvas"></canvas>
+  <div class="node-tooltip" id="tooltip"></div>
+  <div class="hero-content">
+    <span class="eyebrow">// resource hub · updated july 2026</span>
+    <h1>Azure &amp; <span class="accent">Cloud Architecture</span> Hub</h1>
+    <p>A curated collection of resources, templates, and reference implementations for designing, building, and running scalable enterprise systems on Microsoft Azure.</p>
+  </div>
+  <div class="scroll-cue"><div class="line"></div>scroll</div>
+</section>
+
+<section class="overview" id="overview">
+  <div class="overview-grid">
+    <div>
+      <span class="section-num">00 / overview</span>
+      <h2>One hub, five practice areas</h2>
+      <p>The diagram above mirrors the hub-and-spoke topology this repository actually documents: a central Azure practice connected to four disciplines — architecture, infrastructure, data, and security — each carrying its own reference projects.</p>
+      <p>Drag the diagram to rotate it, or hover a node to see what it holds. Everything below is drawn from the same seven repositories and documentation set.</p>
+    </div>
+    <div class="stat-list">
+      <div class="stat"><div class="num">7</div><div class="label">Featured repositories</div></div>
+      <div class="stat"><div class="num">4</div><div class="label">Practice areas</div></div>
+      <div class="stat"><div class="num">5</div><div class="label">Well-Architected pillars</div></div>
+      <div class="stat"><div class="num">13</div><div class="label">Technical guides</div></div>
+    </div>
+  </div>
+</section>
+
+<section id="topics">
+  <div class="section-head">
+    <span class="section-num">01 / topics covered</span>
+    <h2>Four practice areas</h2>
+    <p>Every project and guide in this hub sits under one of these disciplines.</p>
+  </div>
+  <div class="topic-grid">
+    <div class="topic-card">
+      <h3>Cloud Architecture</h3>
+      <ul>
+        <li>Compute, storage, networking, data services</li>
+        <li>Hybrid & multi-cloud strategies</li>
+        <li>Well-Architected Framework</li>
+      </ul>
+    </div>
+    <div class="topic-card">
+      <h3>Infrastructure & DevOps</h3>
+      <ul>
+        <li>Terraform, Bicep, ARM, Pulumi</li>
+        <li>Azure DevOps & GitHub Actions</li>
+        <li>AKS, Docker, Helm</li>
+      </ul>
+    </div>
+    <div class="topic-card">
+      <h3>Data & Analytics</h3>
+      <ul>
+        <li>Data Factory, Synapse, Data Lake</li>
+        <li>Stream Analytics, Event Hubs</li>
+        <li>SQL Server, Cosmos DB, PostgreSQL</li>
+      </ul>
+    </div>
+    <div class="topic-card">
+      <h3>Security & Compliance</h3>
+      <ul>
+        <li>Entra ID, RBAC, Zero Trust</li>
+        <li>VNets, NSGs, Azure Firewall</li>
+        <li>HIPAA, PCI-DSS, GDPR, SOC 2</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="projects" id="projects">
+  <div class="section-head">
+    <span class="section-num">02 / featured projects</span>
+    <h2>Seven reference repositories</h2>
+    <p>Production-ready code and documentation, each maintained as its own repository.</p>
+  </div>
+  <div class="project-list" id="project-list"></div>
+</section>
+
+<section id="stack">
+  <div class="section-head">
+    <span class="section-num">03 / technology stack</span>
+    <h2>What it's built with</h2>
+  </div>
+  <div class="stack-grid" id="stack-grid"></div>
+</section>
+
+<section class="steps" id="start">
+  <div class="section-head">
+    <span class="section-num">04 / getting started</span>
+    <h2>Four steps in</h2>
+    <p>The order that gets you from browsing to shipping.</p>
+  </div>
+  <div class="step-list">
+    <div class="step">
+      <div class="step-marker">1</div>
+      <h4>Explore the resources</h4>
+      <p>Browse the seven featured projects and the documentation set above to see what's already built.</p>
+    </div>
+    <div class="step">
+      <div class="step-marker">2</div>
+      <h4>Choose your path</h4>
+      <p>New to Azure, start with the architecture guides. Deploying to AKS, go straight to the Kubernetes guide. Building a data platform, head to the data resources.</p>
+    </div>
+    <div class="step">
+      <div class="step-marker">3</div>
+      <h4>Review the best practices</h4>
+      <p>Each project ships its own README with setup instructions specific to that repository.</p>
+    </div>
+    <div class="step">
+      <div class="step-marker">4</div>
+      <h4>Adapt and customize</h4>
+      <p>Use the templates and code as a starting point for your own infrastructure, not as a fixed prescription.</p>
+    </div>
+  </div>
+</section>
+
+<section id="pillars">
+  <div class="section-head">
+    <span class="section-num">05 / well-architected framework</span>
+    <h2>Five pillars, every design</h2>
+  </div>
+  <div class="pillar-row" id="pillar-row"></div>
+</section>
+
+<footer>
+  <div class="footer-grid">
+    <div class="footer-col" style="max-width:280px;">
+      <div class="ft-title">Azure & Cloud Architecture Hub</div>
+      <p style="color:var(--text-muted); font-size:13px;">A living resource for cloud architecture, best practices, and enterprise Azure solutions. Continuously evolving.</p>
+    </div>
+    <div class="footer-links">
+      <div class="footer-col">
+        <div class="ft-title">Quick links</div>
+        <a href="https://docs.microsoft.com/azure/" target="_blank" rel="noopener">Azure Docs</a>
+        <a href="https://docs.microsoft.com/azure/architecture/" target="_blank" rel="noopener">Architecture Center</a>
+        <a href="https://docs.microsoft.com/azure/architecture/framework/" target="_blank" rel="noopener">Well-Architected Framework</a>
+        <a href="https://kubernetes.io/docs/" target="_blank" rel="noopener">Kubernetes Docs</a>
+        <a href="https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs" target="_blank" rel="noopener">Terraform Azure Provider</a>
+      </div>
+      <div class="footer-col">
+        <div class="ft-title">Repository</div>
+        <a href="https://github.com/thinkleo987" target="_blank" rel="noopener">GitHub profile</a>
+        <a href="#projects">Featured projects</a>
+        <a href="#stack">Technology stack</a>
+      </div>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>Provided as educational and reference material.</span>
+    <span class="mono">last updated · july 2026</span>
+  </div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+/* ============ DATA ============ */
+const projects = [
+  { name:"azure-architecture-patterns", desc:"Enterprise-grade Azure architecture patterns: multi-tier apps on AKS, microservices, DR/BC design, FinOps cost strategy.", tags:["AKS","Microservices","FinOps"], area:"arch", url:"https://github.com/thinkleo987/azure-architecture-patterns" },
+  { name:"azure-iac-terraform", desc:"Production-ready Terraform & Bicep templates: hub-and-spoke networks, AKS provisioning, secure landing zones, App Gateway configs.", tags:["Terraform","Bicep","IaC"], area:"devops", url:"https://github.com/thinkleo987/azure-iac-terraform" },
+  { name:"aks-kubernetes-guide", desc:"Deploying, managing, and securing Kubernetes on Azure: cluster setup, service mesh networking, RBAC, monitoring, CI/CD integration.", tags:["AKS","Service Mesh","RBAC"], area:"devops", url:"https://github.com/thinkleo987/aks-kubernetes-guide" },
+  { name:"azure-data-platform", desc:"End-to-end data platform: ingestion via Data Factory & Event Hubs, Synapse & Spark processing, Power BI, data governance.", tags:["Synapse","Data Factory","Power BI"], area:"data", url:"https://github.com/thinkleo987/azure-data-platform" },
+  { name:"azure-zero-trust-security", desc:"Modern security architecture: Entra ID, conditional access, microsegmentation, API Management, compliance automation.", tags:["Zero Trust","Entra ID","Compliance"], area:"security", url:"https://github.com/thinkleo987/azure-zero-trust-security" },
+  { name:"azure-devops-pipelines", desc:"Complete CI/CD frameworks: reusable YAML templates, multi-environment deployments, progressive release strategies.", tags:["Azure DevOps","GitHub Actions","CI/CD"], area:"devops", url:"https://github.com/thinkleo987/azure-devops-pipelines" },
+  { name:"azure-migration-toolkit", desc:"Tools and scripts for enterprise migration: workload assessment, automated cutover, post-migration cost tuning.", tags:["Migration","Assessment","Automation"], area:"arch", url:"https://github.com/thinkleo987/azure-migration-toolkit" },
+];
+
+const stack = [
+  { title:"Platforms", items:["Azure","AWS","Google Cloud"] },
+  { title:"Infrastructure as Code", items:["Terraform","Bicep","ARM Templates","Pulumi"] },
+  { title:"Data & Analytics", items:["Data Factory","Synapse","Power BI","Databricks"] },
+  { title:"DevOps & Ops", items:["Azure DevOps","GitHub Actions","Azure Monitor","Grafana"] },
+];
+
+const pillars = [
+  { label:"01", name:"Reliability", desc:"Design for failure, implement redundancy." },
+  { label:"02", name:"Security", desc:"Zero Trust principles, defense in depth." },
+  { label:"03", name:"Cost Optimization", desc:"Right-sizing, automation, monitoring." },
+  { label:"04", name:"Operational Excellence", desc:"Infrastructure as code, incident response." },
+  { label:"05", name:"Performance Efficiency", desc:"Scalability, caching, optimization." },
+];
+
+/* ============ RENDER STATIC LISTS ============ */
+const projectList = document.getElementById('project-list');
+projects.forEach((p, i) => {
+  const row = document.createElement('a');
+  row.className = 'project-row';
+  row.href = p.url;
+  row.target = '_blank';
+  row.rel = 'noopener';
+  row.innerHTML = `
+    <div class="idx">${String(i+1).padStart(2,'0')}</div>
+    <div><h4>${p.name}</h4><div class="desc">${p.desc}</div></div>
+    <div class="tag-group">${p.tags.map(t=>`<span class="tag">${t}</span>`).join('')}</div>
+    <div class="go">view repo</div>
+  `;
+  projectList.appendChild(row);
+});
+
+const stackGrid = document.getElementById('stack-grid');
+stack.forEach(col => {
+  const div = document.createElement('div');
+  div.className = 'stack-col';
+  div.innerHTML = `<div class="stack-title">${col.title}</div>${col.items.map(i=>`<span class="chip">${i}</span>`).join('')}`;
+  stackGrid.appendChild(div);
+});
+
+const pillarRow = document.getElementById('pillar-row');
+pillars.forEach(p => {
+  const div = document.createElement('div');
+  div.className = 'pillar';
+  div.innerHTML = `<div class="p-label">${p.label}</div><h4>${p.name}</h4><p>${p.desc}</p>`;
+  pillarRow.appendChild(div);
+});
+
+/* ============ 3D HUB-AND-SPOKE ============ */
+const canvas = document.getElementById('hub-canvas');
+const tooltip = document.getElementById('tooltip');
+const heroEl = document.querySelector('.hero');
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(50, heroEl.clientWidth / heroEl.clientHeight, 0.1, 1000);
+camera.position.set(0, 2.4, 15);
+
+const renderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(heroEl.clientWidth, heroEl.clientHeight);
+
+const colorAzure = 0x2D7FF9;
+const colorCyan = 0x00D9C0;
+const colorAmber = 0xFFB454;
+
+// group that we rotate as a whole (the "rig")
+const rig = new THREE.Group();
+scene.add(rig);
+
+// central node
+const centralGeo = new THREE.IcosahedronGeometry(0.85, 1);
+const centralMat = new THREE.MeshBasicMaterial({ color: colorAzure, wireframe:true });
+const central = new THREE.Mesh(centralGeo, centralMat);
+central.userData = { label: "Azure Cloud Hub" };
+rig.add(central);
+
+const centralCore = new THREE.Mesh(new THREE.IcosahedronGeometry(0.4, 1), new THREE.MeshBasicMaterial({ color: 0xffffff }));
+rig.add(centralCore);
+
+// inner ring: 4 practice areas
+const areas = [
+  { key:'arch', label:'Cloud Architecture', color: colorAzure },
+  { key:'devops', label:'Infrastructure & DevOps', color: colorCyan },
+  { key:'data', label:'Data & Analytics', color: colorAmber },
+  { key:'security', label:'Security & Compliance', color: 0xff6b6b },
+];
+const innerRadius = 4.2;
+const areaNodes = {};
+const lineMat = new THREE.LineBasicMaterial({ color: 0x3a4a6b, transparent:true, opacity:0.55 });
+
+areas.forEach((a, i) => {
+  const angle = (i / areas.length) * Math.PI * 2;
+  const x = Math.cos(angle) * innerRadius;
+  const z = Math.sin(angle) * innerRadius;
+  const geo = new THREE.IcosahedronGeometry(0.45, 0);
+  const mat = new THREE.MeshBasicMaterial({ color: a.color, wireframe:true });
+  const node = new THREE.Mesh(geo, mat);
+  node.position.set(x, 0, z);
+  node.userData = { label: a.label };
+  rig.add(node);
+  areaNodes[a.key] = node;
+
+  // spoke line to central
+  const points = [central.position.clone(), node.position.clone()];
+  const geoLine = new THREE.BufferGeometry().setFromPoints(points);
+  rig.add(new THREE.Line(geoLine, lineMat));
+});
+
+// outer ring: 7 projects, distributed around, linked to their area
+const outerRadius = 7.4;
+const projectNodes = [];
+projects.forEach((p, i) => {
+  const angle = (i / projects.length) * Math.PI * 2 + 0.3;
+  const x = Math.cos(angle) * outerRadius;
+  const z = Math.sin(angle) * outerRadius;
+  const y = (i % 2 === 0 ? 0.6 : -0.6);
+  const geo = new THREE.OctahedronGeometry(0.32, 0);
+  const parentColor = areas.find(a => a.key === p.area).color;
+  const mat = new THREE.MeshBasicMaterial({ color: parentColor, wireframe:true });
+  const node = new THREE.Mesh(geo, mat);
+  node.position.set(x, y, z);
+  node.userData = { label: p.name };
+  rig.add(node);
+  projectNodes.push(node);
+
+  const areaNode = areaNodes[p.area];
+  const points = [areaNode.position.clone(), node.position.clone()];
+  const geoLine = new THREE.BufferGeometry().setFromPoints(points);
+  const thisLineMat = new THREE.LineBasicMaterial({ color: parentColor, transparent:true, opacity:0.28 });
+  rig.add(new THREE.Line(geoLine, thisLineMat));
+});
+
+// faint starfield
+const starGeo = new THREE.BufferGeometry();
+const starCount = 400;
+const starPositions = new Float32Array(starCount * 3);
+for (let i = 0; i < starCount; i++) {
+  starPositions[i*3] = (Math.random()-0.5) * 60;
+  starPositions[i*3+1] = (Math.random()-0.5) * 60;
+  starPositions[i*3+2] = (Math.random()-0.5) * 60 - 10;
+}
+starGeo.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
+const starMat = new THREE.PointsMaterial({ color: 0x3a4a6b, size:0.06 });
+scene.add(new THREE.Points(starGeo, starMat));
+
+rig.rotation.x = 0.35;
+
+/* interaction: drag to rotate, auto-rotate when idle */
+let isDragging = false;
+let prevX = 0, prevY = 0;
+let autoRotate = true;
+let velocityY = 0.0015;
+
+function pointerDown(x, y){ isDragging = true; autoRotate = false; prevX = x; prevY = y; }
+function pointerMove(x, y){
+  if(!isDragging) return;
+  const dx = x - prevX, dy = y - prevY;
+  rig.rotation.y += dx * 0.005;
+  rig.rotation.x += dy * 0.003;
+  rig.rotation.x = Math.max(-1, Math.min(1, rig.rotation.x));
+  prevX = x; prevY = y;
+}
+function pointerUp(){ isDragging = false; }
+
+canvas.addEventListener('mousedown', e => pointerDown(e.clientX, e.clientY));
+window.addEventListener('mousemove', e => pointerMove(e.clientX, e.clientY));
+window.addEventListener('mouseup', pointerUp);
+canvas.addEventListener('touchstart', e => pointerDown(e.touches[0].clientX, e.touches[0].clientY), {passive:true});
+canvas.addEventListener('touchmove', e => pointerMove(e.touches[0].clientX, e.touches[0].clientY), {passive:true});
+canvas.addEventListener('touchend', pointerUp);
+
+/* hover tooltip via raycasting */
+const raycaster = new THREE.Raycaster();
+const mouseNDC = new THREE.Vector2();
+const hoverable = [central, ...Object.values(areaNodes), ...projectNodes];
+
+canvas.addEventListener('mousemove', e => {
+  const rect = canvas.getBoundingClientRect();
+  mouseNDC.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+  mouseNDC.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+  raycaster.setFromCamera(mouseNDC, camera);
+  const hits = raycaster.intersectObjects(hoverable);
+  if (hits.length > 0) {
+    const obj = hits[0].object;
+    tooltip.textContent = obj.userData.label;
+    tooltip.style.left = (e.clientX - rect.left) + 'px';
+    tooltip.style.top = (e.clientY - rect.top) + 'px';
+    tooltip.style.opacity = '1';
+    canvas.style.cursor = 'pointer';
+  } else {
+    tooltip.style.opacity = '0';
+    canvas.style.cursor = isDragging ? 'grabbing' : 'grab';
+  }
+});
+canvas.addEventListener('mouseleave', () => { tooltip.style.opacity = '0'; });
+
+function resize(){
+  const w = heroEl.clientWidth, h = heroEl.clientHeight;
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+  renderer.setSize(w, h);
+}
+window.addEventListener('resize', resize);
+
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function animate(){
+  requestAnimationFrame(animate);
+  if (autoRotate && !reduceMotion) rig.rotation.y += velocityY;
+  central.rotation.y += 0.004;
+  central.rotation.x += 0.002;
+  renderer.render(scene, camera);
+}
+animate();
+</script>
+</body>
+</html>
