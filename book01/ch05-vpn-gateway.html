@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hybrid: VPN Gateway | Azure Networking Deep Dive | APAF</title>
+<script>(function(){var s=localStorage.getItem('apaf-theme');if(s)document.documentElement.setAttribute('data-theme',s);else if(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)document.documentElement.setAttribute('data-theme','dark');})()</script>
+<style>
+*,*::before,*::after{box-sizing:border-box}html{font-size:100%;scroll-behavior:smooth}body{margin:0;padding:0}h1,h2,h3,h4,p,blockquote,figure,figcaption,ul,ol,li,table,th,td,pre,code{margin:0;padding:0}img{display:block;max-width:100%}button{font:inherit}
+:root{--c-primary:#0F2D5E;--c-accent:#0078D4;--c-success:#107C10;--c-warning:#FFB900;--c-error:#D13438;--c-bg:#FAF9F8;--c-surface:#F3F2F1;--c-border:#EDEBE9;--c-text:#1B1A19;--c-text2:#605E5C;--c-link:#0078D4;--callout-note-bg:#EFF6FC;--callout-note-bd:#0078D4;--callout-warn-bg:#FFF4CE;--callout-warn-bd:#FFB900;--callout-imp-bg:#FDE7E9;--callout-imp-bd:#D13438;--callout-tip-bg:#DFF6DD;--callout-tip-bd:#107C10;--code-bg:#282C34;--shadow-sm:0 1px 3px rgba(0,0,0,.12);--radius:6px;--font-body:'Segoe UI',system-ui,-apple-system,sans-serif;--font-mono:'Cascadia Code',Consolas,'Courier New',monospace}
+[data-theme="dark"]{--c-bg:#1E1E2E;--c-surface:#252535;--c-border:#3A3A5C;--c-text:#E2E2F0;--c-text2:#9090B8;--c-link:#4DAEF0;--callout-note-bg:#0D2D42;--callout-note-bd:#4DAEF0;--callout-warn-bg:#2D2200;--callout-warn-bd:#FFD740;--callout-imp-bg:#2D0D0F;--callout-imp-bd:#FF5252;--callout-tip-bg:#0D2B0D;--callout-tip-bd:#4CAF50}
+.skip-link{position:absolute;top:-3rem;left:1rem;padding:.5rem 1rem;background:var(--c-accent);color:#fff;border-radius:var(--radius);font-size:.875rem;z-index:9999;transition:top .15s;text-decoration:none}.skip-link:focus{top:.5rem}
+.site-header{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:.625rem 1.5rem;background:var(--c-primary);color:#fff;box-shadow:var(--shadow-sm)}.site-header__brand{display:flex;align-items:center;gap:.75rem;text-decoration:none;color:#fff}.site-header__wordmark{font-size:1rem;font-weight:700}.site-header__subtitle{font-size:.75rem;opacity:.75}.btn-icon{background:transparent;border:1px solid rgba(255,255,255,.3);border-radius:var(--radius);color:#fff;cursor:pointer;width:2rem;height:2rem;display:flex;align-items:center;justify-content:center}
+.layout{display:grid;grid-template-columns:240px 1fr 220px;min-height:calc(100vh - 3rem);background:var(--c-bg)}
+@media(max-width:1200px){.layout{grid-template-columns:240px 1fr}.toc-sidebar{display:none}}@media(max-width:768px){.layout{grid-template-columns:1fr}.nav-sidebar{display:none}}
+.nav-sidebar{border-right:1px solid var(--c-border);background:var(--c-surface);padding:1.5rem 0;overflow-y:auto;position:sticky;top:3rem;height:calc(100vh - 3rem)}.nav-sidebar__section{padding:.25rem 1rem .5rem;font-size:.6875rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--c-text2)}.nav-sidebar__list{list-style:none;padding:0;margin:0 0 1.5rem}.nav-sidebar__item a{display:block;padding:.4rem 1.25rem;font-size:.8125rem;color:var(--c-text2);text-decoration:none;border-left:2px solid transparent;transition:all .15s}.nav-sidebar__item a:hover{color:var(--c-text);background:var(--c-border)}.nav-sidebar__item--active a{color:var(--c-accent);border-left-color:var(--c-accent);background:rgba(0,120,212,.06);font-weight:600}
+.progress-bar-wrap{display:flex;align-items:center;gap:.75rem;padding:.75rem 0 0;margin-bottom:1.5rem}.progress-bar-track{flex:1;height:4px;border-radius:2px;background:var(--c-border);overflow:hidden}.progress-bar-fill{height:100%;border-radius:2px;background:var(--c-accent)}.progress-bar-label{font-size:.75rem;color:var(--c-text2);white-space:nowrap}
+.main-content{padding:2rem 2.5rem 4rem;min-width:0;max-width:860px}.doc-article__eyebrow{font-size:.75rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--c-accent);margin-bottom:.5rem}.doc-article__title{font-size:2rem;font-weight:700;color:var(--c-text);line-height:1.2;margin-bottom:.75rem}.doc-article__meta{font-size:.8125rem;color:var(--c-text2);margin-bottom:1.5rem;display:flex;flex-wrap:wrap;gap:1rem}
+.learning-objectives{background:var(--c-surface);border:1px solid var(--c-border);border-left:3px solid var(--c-accent);border-radius:var(--radius);padding:1rem 1.25rem;margin-bottom:2rem}.learning-objectives__title{font-size:.8125rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--c-accent);margin-bottom:.6rem}.learning-objectives ol{padding-left:1.25rem;margin:0}.learning-objectives li{font-size:.9rem;color:var(--c-text);line-height:1.55;margin-bottom:.35rem}
+.doc-article h2{font-size:1.5rem;font-weight:700;color:var(--c-text);padding-top:2rem;margin-bottom:.75rem;border-bottom:1px solid var(--c-border);padding-bottom:.5rem}.doc-article h3{font-size:1.2rem;font-weight:700;color:var(--c-text);padding-top:1.5rem;margin-bottom:.6rem}.doc-article p{font-size:.9375rem;line-height:1.7;color:var(--c-text);margin-bottom:1rem}.doc-article code{font-family:var(--font-mono);font-size:.8125rem;background:var(--c-surface);border:1px solid var(--c-border);border-radius:3px;padding:.1em .35em}[data-theme="dark"] .doc-article code{background:#2A2A3E;border-color:#3A3A5C}.doc-article ul,.doc-article ol{padding-left:1.5rem;margin-bottom:1rem}.doc-article li{font-size:.9375rem;line-height:1.7;color:var(--c-text);margin-bottom:.35rem}.doc-article hr{border:none;border-top:1px solid var(--c-border);margin:2rem 0}
+.table-wrap{overflow-x:auto;margin-bottom:1.5rem;border-radius:var(--radius);border:1px solid var(--c-border)}.apaf-table{width:100%;border-collapse:collapse;font-size:.875rem}.apaf-table th{background:var(--c-surface);font-weight:700;font-size:.8125rem;text-align:left;padding:.6rem .875rem;border-bottom:2px solid var(--c-border)}.apaf-table td{padding:.55rem .875rem;color:var(--c-text);border-bottom:1px solid var(--c-border);vertical-align:top}.apaf-table tr:last-child td{border-bottom:none}.apaf-table tr:nth-child(even) td{background:var(--c-surface)}
+.callout{display:flex;gap:.75rem;padding:.875rem 1rem;border-radius:var(--radius);margin:1rem 0 1.25rem;border-left:3px solid}.callout__icon{font-size:1rem;flex-shrink:0}.callout__body{flex:1}.callout__label{font-size:.75rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;margin-bottom:.3rem}.callout__text{font-size:.875rem;line-height:1.6;color:var(--c-text)}.callout--note{background:var(--callout-note-bg);border-color:var(--callout-note-bd)}.callout--note .callout__label{color:var(--callout-note-bd)}.callout--warning{background:var(--callout-warn-bg);border-color:var(--callout-warn-bd)}.callout--warning .callout__label{color:#7A5C00}[data-theme="dark"] .callout--warning .callout__label{color:var(--callout-warn-bd)}.callout--important{background:var(--callout-imp-bg);border-color:var(--callout-imp-bd)}.callout--important .callout__label{color:var(--callout-imp-bd)}.callout--tip{background:var(--callout-tip-bg);border-color:var(--callout-tip-bd)}.callout--tip .callout__label{color:var(--callout-tip-bd)}
+.code-viewer{margin:1rem 0 1.5rem;border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow-sm)}.code-viewer__header{display:flex;align-items:center;justify-content:space-between;padding:.4rem .875rem;background:#21252B;border-bottom:1px solid #181A1F}.code-viewer__lang{font-family:var(--font-mono);font-size:.7rem;color:#8B9099;letter-spacing:.06em;text-transform:uppercase}.code-viewer__copy{background:transparent;border:1px solid #3A4048;color:#8B9099;border-radius:3px;padding:.2rem .6rem;font-size:.7rem;cursor:pointer}.code-viewer__pre{margin:0;padding:1rem;overflow-x:auto;background:#282C34;font-family:var(--font-mono);font-size:.8125rem;line-height:1.65;color:#ABB2BF}
+.tok-cmt{color:#5C6370;font-style:italic}.tok-kw{color:#C678DD}.tok-str{color:#98C379}.tok-fn{color:#61AFEF}.tok-flag{color:#56B6C2}.tok-var{color:#E06C75}
+.apaf-figure{margin:1.5rem 0 2rem;text-align:center}.apaf-figure img{max-width:100%;height:auto;border-radius:var(--radius);border:1px solid var(--c-border)}.apaf-figure figcaption{font-size:.8125rem;font-style:italic;color:var(--c-text2);margin-top:.6rem}
+.lab-task{border:1px solid var(--c-border);border-radius:var(--radius);margin-bottom:1.5rem;overflow:hidden}.lab-task__header{display:flex;align-items:center;gap:.75rem;padding:.6rem 1rem;background:var(--c-surface);border-bottom:1px solid var(--c-border)}.lab-task__badge{display:inline-flex;align-items:center;justify-content:center;width:1.5rem;height:1.5rem;border-radius:50%;background:var(--c-accent);color:#fff;font-size:.75rem;font-weight:700;flex-shrink:0}.lab-task__title{font-size:.9rem;font-weight:700;color:var(--c-text)}.lab-task__body{padding:.875rem 1rem}
+.toc-sidebar{padding:1.5rem 1rem;border-left:1px solid var(--c-border);position:sticky;top:3rem;height:calc(100vh - 3rem);overflow-y:auto}.toc-sidebar__heading{font-size:.6875rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--c-text2);margin-bottom:.75rem}.toc-sidebar__list{list-style:none;padding:0;margin:0}.toc-sidebar__list li{margin-bottom:.2rem}.toc-sidebar__list a{font-size:.8rem;color:var(--c-text2);text-decoration:none;display:block;padding:.2rem .5rem;border-radius:3px;border-left:2px solid transparent;transition:all .15s}.toc-sidebar__list a:hover,.toc-sidebar__list a.is-active{color:var(--c-accent)}.toc-sidebar__list a.is-active{border-left-color:var(--c-accent);background:rgba(0,120,212,.06)}
+.site-footer{background:var(--c-surface);border-top:1px solid var(--c-border);padding:1.5rem 2rem}.chapter-nav{display:flex;justify-content:space-between;align-items:center;max-width:860px}.chapter-nav__link{display:flex;flex-direction:column;gap:.2rem;text-decoration:none;padding:.75rem 1rem;border:1px solid var(--c-border);border-radius:var(--radius);background:var(--c-bg);transition:border-color .15s;max-width:260px}.chapter-nav__link:hover{border-color:var(--c-accent)}.chapter-nav__dir{font-size:.7rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--c-text2)}.chapter-nav__title{font-size:.875rem;font-weight:600;color:var(--c-accent)}.apaf-footer-copy{text-align:center;margin-top:1.25rem;font-size:.75rem;color:var(--c-text2)}
+</style>
+</head>
+<body>
+<a class="skip-link" href="#main-content">Skip to main content</a>
+<header class="site-header" role="banner">
+  <a class="site-header__brand" href="../index.html"><span class="site-header__wordmark">APAF</span><span class="site-header__subtitle">Azure Networking Deep Dive</span></a>
+  <button class="btn-icon" id="theme-toggle" aria-label="Toggle dark mode"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6zm0 13a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 13zm8-5a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2a.5.5 0 0 1 .5.5zM3 8a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2A.5.5 0 0 1 3 8z"/></svg></button>
+</header>
+<div class="layout">
+<nav class="nav-sidebar" aria-label="Book chapters">
+  <p class="nav-sidebar__section">Azure Networking Deep Dive</p>
+  <ul class="nav-sidebar__list">
+    <li class="nav-sidebar__item"><a href="ch01-azure-network-foundations.html">1. Azure Network Foundations</a></li>
+    <li class="nav-sidebar__item"><a href="ch02-routing-traffic-control.html">2. Routing and Traffic Control</a></li>
+    <li class="nav-sidebar__item"><a href="ch03-hub-spoke-topology.html">3. Hub-and-Spoke Topology</a></li>
+    <li class="nav-sidebar__item"><a href="ch04-azure-virtual-wan.html">4. Azure Virtual WAN</a></li>
+    <li class="nav-sidebar__item nav-sidebar__item--active"><a href="ch05-vpn-gateway.html" aria-current="page">5. Hybrid: VPN Gateway</a></li>
+    <li class="nav-sidebar__item"><a href="ch06-expressroute.html">6. Hybrid: ExpressRoute</a></li>
+    <li class="nav-sidebar__item"><a href="ch07-private-link.html">7. Private Link and Endpoints</a></li>
+    <li class="nav-sidebar__item"><a href="ch08-load-balancer-appgw.html">8. Load Balancer and App Gateway</a></li>
+    <li class="nav-sidebar__item"><a href="ch09-front-door-cdn.html">9. Azure Front Door and CDN</a></li>
+    <li class="nav-sidebar__item"><a href="ch10-network-security.html">10. Network Security</a></li>
+    <li class="nav-sidebar__item"><a href="ch11-dns-architecture.html">11. DNS Architecture</a></li>
+    <li class="nav-sidebar__item"><a href="ch12-monitoring-troubleshooting.html">12. Monitoring and Troubleshooting</a></li>
+  </ul>
+</nav>
+<main class="main-content" id="main-content">
+<article class="doc-article">
+  <header>
+    <div class="progress-bar-wrap" role="progressbar" aria-valuenow="5" aria-valuemin="1" aria-valuemax="12" aria-label="Chapter 5 of 12">
+      <div class="progress-bar-track"><div class="progress-bar-fill" style="width:41.67%"></div></div>
+      <span class="progress-bar-label">Chapter 5 of 12</span>
+    </div>
+    <p class="doc-article__eyebrow">Book 01 — Azure Networking Deep Dive</p>
+    <h1 class="doc-article__title">Hybrid Connectivity: VPN Gateway</h1>
+    <div class="doc-article__meta"><span>&#128197; <time datetime="2026-07-08">July 8, 2026</time></span><span>&#128337; 40 min read</span><span>&#9881;&#65039; Lab included</span></div>
+  </header>
+
+  <aside class="learning-objectives" aria-label="Learning objectives">
+    <p class="learning-objectives__title">Learning Objectives</p>
+    <ol>
+      <li>Select the correct VPN Gateway SKU based on throughput and availability requirements.</li>
+      <li>Configure a Site-to-Site VPN with IKEv2 and BGP for dynamic route exchange.</li>
+      <li>Deploy an active-active VPN Gateway with two public IPs for high availability.</li>
+      <li>Set up Point-to-Site VPN with Azure AD authentication and OpenVPN protocol.</li>
+      <li>Apply custom IPSec/IKE policies for on-premises device compatibility.</li>
+      <li>Explain GatewaySubnet constraints and why they exist.</li>
+    </ol>
+  </aside>
+
+  <p>Azure VPN Gateway provides encrypted IPSec/IKE tunnels between Azure VNets and on-premises networks. It sits inside <code>GatewaySubnet</code> in your hub VNet and supports three connection types: Site-to-Site (branch/DC to Azure), Point-to-Site (remote users), and VNet-to-VNet (cross-region or cross-subscription VNet connectivity without internet transit).</p>
+
+  <h2 id="s1-overview">VPN Gateway Overview</h2>
+
+  <h3 id="s1-1-gatewaysubnet">GatewaySubnet Requirements</h3>
+  <p>The subnet that hosts VPN (and ExpressRoute) gateway instances must be named exactly <code>GatewaySubnet</code> — this name is how the Azure fabric identifies it as a gateway subnet and applies special routing rules.</p>
+  <div class="callout callout--important" role="note">
+    <span class="callout__icon" aria-hidden="true">&#128681;</span>
+    <div class="callout__body"><p class="callout__label">Important — GatewaySubnet Rules</p>
+    <p class="callout__text">1. Name must be exactly <code>GatewaySubnet</code> (case-sensitive). 2. Minimum /28; <strong>recommend /26</strong> to support multiple gateway instances without IP exhaustion. 3. <strong>No NSG</strong> — Azure controls traffic to/from the subnet. 4. <strong>No UDR with 0.0.0.0/0</strong> — this breaks gateway functionality. Specific prefix routes (per-spoke UDRs pointing to Firewall) are allowed.</p></div>
+  </div>
+
+  <h3 id="s1-2-skus">VPN Gateway SKUs</h3>
+  <div class="table-wrap">
+    <table class="apaf-table">
+      <thead><tr><th>SKU</th><th>Max Throughput</th><th>Max S2S Tunnels</th><th>Zone Redundant</th></tr></thead>
+      <tbody>
+        <tr><td>Basic</td><td>100 Mbps</td><td>10</td><td>No — legacy, avoid</td></tr>
+        <tr><td>VpnGw1 / VpnGw1AZ</td><td>650 Mbps</td><td>30</td><td>AZ variant only</td></tr>
+        <tr><td>VpnGw2 / VpnGw2AZ</td><td>1 Gbps</td><td>30</td><td>AZ variant only</td></tr>
+        <tr><td>VpnGw3 / VpnGw3AZ</td><td>1.25 Gbps</td><td>30</td><td>AZ variant only</td></tr>
+        <tr><td>VpnGw4 / VpnGw4AZ</td><td>5 Gbps</td><td>100</td><td>AZ variant only</td></tr>
+        <tr><td>VpnGw5 / VpnGw5AZ</td><td>10 Gbps</td><td>100</td><td>AZ variant only</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>Zone-redundant (AZ) SKUs require a Standard-tier zone-redundant public IP. The Basic SKU does not support BGP or active-active — do not use it for new deployments.</p>
+
+  <h2 id="s2-s2s">Site-to-Site VPN</h2>
+
+  <h3 id="s2-1-components">Three-Resource Pattern</h3>
+  <p>An S2S connection requires three Azure resources: a <strong>VPN Gateway</strong> in your GatewaySubnet (the Azure end), a <strong>Local Network Gateway</strong> representing the on-premises VPN device, and a <strong>Connection</strong> linking them with a shared key.</p>
+
+  <div class="code-viewer">
+    <div class="code-viewer__header"><span class="code-viewer__lang">bash</span><button class="code-viewer__copy" data-copy-target="ce-s2s" aria-label="Copy code">Copy</button></div>
+    <pre class="code-viewer__pre" id="ce-s2s"><code><span class="tok-cmt"># Local Network Gateway — represents on-prem VPN device</span>
+az network local-gateway create \
+  <span class="tok-flag">--name</span> lgw-onprem <span class="tok-flag">--resource-group</span> rg-connectivity \
+  <span class="tok-flag">--location</span> eastus2 \
+  <span class="tok-flag">--gateway-ip-address</span> 203.0.113.10 \
+  <span class="tok-flag">--local-address-prefixes</span> 192.168.0.0/16 \
+  <span class="tok-flag">--asn</span> 65020 <span class="tok-flag">--bgp-peering-address</span> 192.168.0.1
+
+<span class="tok-cmt"># S2S Connection with BGP enabled</span>
+az network vpn-connection create \
+  <span class="tok-flag">--name</span> conn-onprem <span class="tok-flag">--resource-group</span> rg-connectivity \
+  <span class="tok-flag">--vnet-gateway1</span> vpngw-hub \
+  <span class="tok-flag">--local-gateway2</span> lgw-onprem \
+  <span class="tok-flag">--shared-key</span> <span class="tok-str">"$(az keyvault secret show --vault-name kv-corp --name vpn-psk --query value -o tsv)"</span> \
+  <span class="tok-flag">--enable-bgp</span></code></pre>
+  </div>
+
+  <figure class="apaf-figure" id="fig-5-1">
+    <img src="../diagrams/CH05-FIG-01-vpn-gateway-architecture.svg"
+      alt="VPN Gateway architecture. Hub VNet GatewaySubnet contains two VPN Gateway instances (active-active). S2S IPSec/IKEv2 tunnels connect to on-premises VPN device. BGP sessions run over tunnels. P2S endpoint accepts remote user connections. Rules panel shows no NSG, no default UDR on GatewaySubnet."
+      width="1100" height="560" loading="eager" decoding="async">
+    <figcaption><strong>Figure 5.1</strong> — Azure VPN Gateway architecture: S2S tunnels, BGP over VPN, P2S endpoint, and GatewaySubnet constraints</figcaption>
+  </figure>
+
+  <h3 id="s2-2-bgp">BGP over VPN</h3>
+  <p>BGP over VPN exchanges routes dynamically. Azure VPN Gateway uses ASN 65010 by default (configurable). The BGP peer IP must fall within <code>GatewaySubnet</code>. Benefits: automatic route updates when on-premises networks change, no need to update Local Network Gateway prefixes manually.</p>
+
+  <div class="code-viewer">
+    <div class="code-viewer__header"><span class="code-viewer__lang">bash</span><button class="code-viewer__copy" data-copy-target="ce-bgpgw" aria-label="Copy code">Copy</button></div>
+    <pre class="code-viewer__pre" id="ce-bgpgw"><code><span class="tok-cmt"># Create VPN Gateway with BGP and active-active (two PIPs)</span>
+az network vnet-gateway create \
+  <span class="tok-flag">--name</span> vpngw-hub <span class="tok-flag">--resource-group</span> rg-connectivity \
+  <span class="tok-flag">--vnet</span> vnet-hub-001 \
+  <span class="tok-flag">--gateway-type</span> Vpn <span class="tok-flag">--vpn-type</span> RouteBased \
+  <span class="tok-flag">--sku</span> VpnGw2AZ <span class="tok-flag">--active-active</span> \
+  <span class="tok-flag">--public-ip-addresses</span> pip-vpngw-1 pip-vpngw-2 \
+  <span class="tok-flag">--asn</span> 65010 <span class="tok-flag">--bgp-peering-address</span> 10.0.0.254</code></pre>
+  </div>
+
+  <h2 id="s3-p2s">Point-to-Site VPN</h2>
+
+  <h3 id="s3-1-auth">Authentication Methods</h3>
+  <div class="table-wrap">
+    <table class="apaf-table">
+      <thead><tr><th>Method</th><th>Protocol</th><th>Best For</th></tr></thead>
+      <tbody>
+        <tr><td>Certificate (client cert)</td><td>IKEv2 or SSTP</td><td>Corporate devices with managed cert deployment</td></tr>
+        <tr><td>Azure AD / OIDC</td><td>OpenVPN</td><td>Azure AD conditional access, MFA enforcement</td></tr>
+        <tr><td>RADIUS</td><td>IKEv2 or OpenVPN</td><td>Integration with existing on-prem NPS/RADIUS</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="code-viewer">
+    <div class="code-viewer__header"><span class="code-viewer__lang">bash</span><button class="code-viewer__copy" data-copy-target="ce-p2s" aria-label="Copy code">Copy</button></div>
+    <pre class="code-viewer__pre" id="ce-p2s"><code><span class="tok-cmt"># Configure P2S on existing VPN Gateway — certificate + OpenVPN</span>
+az network vnet-gateway update \
+  <span class="tok-flag">--name</span> vpngw-hub <span class="tok-flag">--resource-group</span> rg-connectivity \
+  <span class="tok-flag">--vpn-auth-types</span> Certificate \
+  <span class="tok-flag">--vpn-client-protocol</span> OpenVPN \
+  <span class="tok-flag">--address-prefixes</span> 172.16.100.0/24 \
+  <span class="tok-flag">--root-cert-name</span> corp-root \
+  <span class="tok-flag">--root-cert-data</span> <span class="tok-str">"$(cat corp-root.cer | base64)"</span></code></pre>
+  </div>
+
+  <h2 id="s4-active-active">Active-Active Configuration</h2>
+  <p>Active-active deploys two gateway instances simultaneously, each with its own public IP. Both instances handle live traffic. With BGP, failover is sub-second (BGP reconvergence) versus 60–90 seconds for active-passive cold start.</p>
+
+  <figure class="apaf-figure" id="fig-5-2">
+    <img src="../diagrams/CH05-FIG-02-active-active-vpn-topology.svg"
+      alt="Active-active VPN topology. Azure side shows two gateway instances, each with own PIP and BGP peer IP. On-premises shows single VPN device with two tunnels to both instances. Both tunnels carry live traffic. If Instance 1 fails, BGP reconverges to Instance 2 in under one second."
+      width="1100" height="500" loading="lazy" decoding="async">
+    <figcaption><strong>Figure 5.2</strong> — Active-active VPN Gateway: two instances, dual tunnels, BGP for sub-second failover</figcaption>
+  </figure>
+
+  <div class="callout callout--note" role="note">
+    <span class="callout__icon" aria-hidden="true">&#8505;&#65039;</span>
+    <div class="callout__body"><p class="callout__label">Note</p>
+    <p class="callout__text">The on-premises VPN device must support two simultaneous IKE sessions to the same Azure VNet. Most enterprise firewalls (Cisco, Fortinet, Palo Alto) do. Check your device's datasheet for "active-active VPN gateway" or "dual-tunnel IPSec" support before committing to this design.</p></div>
+  </div>
+
+  <h2 id="s5-custom-ipsec">Custom IPSec/IKE Policy</h2>
+  <p>When your on-premises device requires specific cipher suites, configure a custom IPSec/IKE policy. The custom policy replaces the default policy entirely — only the specified algorithms are accepted.</p>
+
+  <div class="code-viewer">
+    <div class="code-viewer__header"><span class="code-viewer__lang">bash</span><button class="code-viewer__copy" data-copy-target="ce-ipsec" aria-label="Copy code">Copy</button></div>
+    <pre class="code-viewer__pre" id="ce-ipsec"><code><span class="tok-cmt"># Set custom IPSec/IKE policy (replaces default)</span>
+az network vpn-connection ipsec-policy add \
+  <span class="tok-flag">--connection-name</span> conn-onprem \
+  <span class="tok-flag">--resource-group</span> rg-connectivity \
+  <span class="tok-flag">--ike-encryption</span> AES256 <span class="tok-flag">--ike-integrity</span> SHA256 \
+  <span class="tok-flag">--dh-group</span> DHGroup14 \
+  <span class="tok-flag">--ipsec-encryption</span> AES256 <span class="tok-flag">--ipsec-integrity</span> SHA256 \
+  <span class="tok-flag">--pfs-group</span> PFS14 \
+  <span class="tok-flag">--sa-lifetime</span> 27000 <span class="tok-flag">--sa-datasize</span> 102400000</code></pre>
+  </div>
+
+  <h2 id="s6-lab">Lab: Active-Active VPN Gateway with BGP</h2>
+
+  <div class="lab-task">
+    <div class="lab-task__header"><span class="lab-task__badge">1</span><h3 class="lab-task__title">Deploy Active-Active VPN Gateway (CE-14)</h3></div>
+    <div class="lab-task__body">
+      <div class="code-viewer">
+        <div class="code-viewer__header"><span class="code-viewer__lang">bash</span><button class="code-viewer__copy" data-copy-target="ce14" aria-label="Copy CE-14">Copy</button></div>
+        <pre class="code-viewer__pre" id="ce14"><code><span class="tok-cmt"># CE-14: Hub VNet + GatewaySubnet + active-active VPN Gateway</span>
+<span class="tok-var">RG</span>=<span class="tok-str">"rg-lab-ch05"</span>; <span class="tok-var">LOC</span>=<span class="tok-str">"eastus2"</span>
+az group create <span class="tok-flag">--name</span> <span class="tok-str">"$RG"</span> <span class="tok-flag">--location</span> <span class="tok-str">"$LOC"</span>
+
+az network vnet create <span class="tok-flag">--name</span> vnet-hub <span class="tok-flag">--resource-group</span> <span class="tok-str">"$RG"</span> \
+  <span class="tok-flag">--location</span> <span class="tok-str">"$LOC"</span> <span class="tok-flag">--address-prefixes</span> 10.0.0.0/22
+az network vnet subnet create <span class="tok-flag">--name</span> GatewaySubnet \
+  <span class="tok-flag">--resource-group</span> <span class="tok-str">"$RG"</span> <span class="tok-flag">--vnet-name</span> vnet-hub \
+  <span class="tok-flag">--address-prefix</span> 10.0.0.0/26
+
+<span class="tok-kw">for</span> i <span class="tok-kw">in</span> 1 2; <span class="tok-kw">do</span>
+  az network public-ip create <span class="tok-flag">--name</span> <span class="tok-str">"pip-vpngw-$i"</span> \
+    <span class="tok-flag">--resource-group</span> <span class="tok-str">"$RG"</span> <span class="tok-flag">--location</span> <span class="tok-str">"$LOC"</span> \
+    <span class="tok-flag">--sku</span> Standard <span class="tok-flag">--zone</span> 1 2 3
+<span class="tok-kw">done</span>
+
+az network vnet-gateway create \
+  <span class="tok-flag">--name</span> vpngw-hub <span class="tok-flag">--resource-group</span> <span class="tok-str">"$RG"</span> \
+  <span class="tok-flag">--vnet</span> vnet-hub <span class="tok-flag">--gateway-type</span> Vpn <span class="tok-flag">--vpn-type</span> RouteBased \
+  <span class="tok-flag">--sku</span> VpnGw2AZ <span class="tok-flag">--active-active</span> \
+  <span class="tok-flag">--public-ip-addresses</span> pip-vpngw-1 pip-vpngw-2 \
+  <span class="tok-flag">--asn</span> 65010</code></pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="lab-task">
+    <div class="lab-task__header"><span class="lab-task__badge">2</span><h3 class="lab-task__title">Configure Local Gateway and Verify BGP (CE-15)</h3></div>
+    <div class="lab-task__body">
+      <div class="code-viewer">
+        <div class="code-viewer__header"><span class="code-viewer__lang">bash</span><button class="code-viewer__copy" data-copy-target="ce15" aria-label="Copy CE-15">Copy</button></div>
+        <pre class="code-viewer__pre" id="ce15"><code><span class="tok-cmt"># CE-15: Local Gateway + BGP Connection</span>
+az network local-gateway create \
+  <span class="tok-flag">--name</span> lgw-branch <span class="tok-flag">--resource-group</span> <span class="tok-str">"$RG"</span> \
+  <span class="tok-flag">--location</span> <span class="tok-str">"$LOC"</span> \
+  <span class="tok-flag">--gateway-ip-address</span> 198.51.100.1 \
+  <span class="tok-flag">--local-address-prefixes</span> 192.168.10.0/24 \
+  <span class="tok-flag">--asn</span> 65020 <span class="tok-flag">--bgp-peering-address</span> 192.168.10.1
+
+az network vpn-connection create \
+  <span class="tok-flag">--name</span> conn-branch <span class="tok-flag">--resource-group</span> <span class="tok-str">"$RG"</span> \
+  <span class="tok-flag">--vnet-gateway1</span> vpngw-hub \
+  <span class="tok-flag">--local-gateway2</span> lgw-branch \
+  <span class="tok-flag">--shared-key</span> <span class="tok-str">"Lab@Pass123!"</span> <span class="tok-flag">--enable-bgp</span>
+
+<span class="tok-cmt"># View BGP peer status (requires tunnel to be up)</span>
+az network vnet-gateway list-bgp-peer-status \
+  <span class="tok-flag">--resource-group</span> <span class="tok-str">"$RG"</span> <span class="tok-flag">--name</span> vpngw-hub <span class="tok-flag">--output</span> table
+
+az group delete <span class="tok-flag">--name</span> <span class="tok-str">"$RG"</span> <span class="tok-flag">--yes</span> <span class="tok-flag">--no-wait</span></code></pre>
+      </div>
+    </div>
+  </div>
+
+  <h2 id="s7-summary">Summary</h2>
+  <div class="table-wrap">
+    <table class="apaf-table">
+      <thead><tr><th>Concept</th><th>Key Fact</th></tr></thead>
+      <tbody>
+        <tr><td>GatewaySubnet</td><td>Exact name; /26 recommended; no NSG; no 0.0.0.0/0 UDR</td></tr>
+        <tr><td>Basic SKU</td><td>Legacy — no BGP, no active-active; avoid for new deployments</td></tr>
+        <tr><td>Active-active</td><td>Two instances + two PIPs; BGP gives &lt; 1s failover</td></tr>
+        <tr><td>Zone-redundant (AZ)</td><td>Standard PIP required; survives full AZ failure</td></tr>
+        <tr><td>BGP over VPN</td><td>Requires IKEv2; each instance needs separate BGP peer IP in GatewaySubnet</td></tr>
+        <tr><td>P2S auth options</td><td>Certificate, Azure AD (OpenVPN), RADIUS</td></tr>
+        <tr><td>Custom IPSec policy</td><td>Replaces default — only specified algorithms accepted</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>Chapter 6 covers ExpressRoute — dedicated private connectivity bypassing the internet, Private and Microsoft peering options, FastPath, Global Reach, and SLA design patterns.</p>
+  <hr>
+  <p style="font-size:.8125rem;color:var(--c-text2)"><strong>Chapter:</strong> 5 of 12 &nbsp;|&nbsp; <strong>Status:</strong> v0.1 Draft &nbsp;|&nbsp; <time datetime="2026-07-08">2026-07-08</time></p>
+</article>
+</main>
+<aside class="toc-sidebar" aria-label="Table of contents">
+  <nav aria-label="On this page">
+    <h2 class="toc-sidebar__heading">On this page</h2>
+    <ol class="toc-sidebar__list" id="toc-list">
+      <li><a href="#s1-overview">1. VPN Gateway Overview</a></li>
+      <li><a href="#s2-s2s">2. Site-to-Site VPN</a></li>
+      <li><a href="#s3-p2s">3. Point-to-Site VPN</a></li>
+      <li><a href="#s4-active-active">4. Active-Active</a></li>
+      <li><a href="#s5-custom-ipsec">5. Custom IPSec Policy</a></li>
+      <li><a href="#s6-lab">6. Lab</a></li>
+      <li><a href="#s7-summary">7. Summary</a></li>
+    </ol>
+  </nav>
+</aside>
+</div>
+<footer class="site-footer" role="contentinfo">
+  <nav class="chapter-nav" aria-label="Chapter navigation">
+    <a class="chapter-nav__link" href="ch04-azure-virtual-wan.html"><span class="chapter-nav__dir">&larr; Previous</span><span class="chapter-nav__title">4. Azure Virtual WAN</span></a>
+    <a class="chapter-nav__link" href="ch06-expressroute.html"><span class="chapter-nav__dir">Next &rarr;</span><span class="chapter-nav__title">6. Hybrid: ExpressRoute</span></a>
+  </nav>
+  <p class="apaf-footer-copy">Azure Networking Deep Dive &mdash; APAF v1.0 &mdash; &copy; 2026</p>
+</footer>
+<script defer>(function(){var btn=document.getElementById('theme-toggle');if(btn)btn.addEventListener('click',function(){var c=document.documentElement.getAttribute('data-theme'),n=c==='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',n);localStorage.setItem('apaf-theme',n);});document.querySelectorAll('.code-viewer__copy').forEach(function(b){b.addEventListener('click',function(){var id=b.getAttribute('data-copy-target'),el=document.getElementById(id);if(!el)return;navigator.clipboard.writeText(el.innerText||'').then(function(){b.textContent='Copied!';setTimeout(function(){b.textContent='Copy';},2000);});});});var hs=Array.from(document.querySelectorAll('.doc-article h2,.doc-article h3')),ls=document.querySelectorAll('.toc-sidebar__list a'),vis=new Set();if(hs.length&&ls.length&&'IntersectionObserver' in window){var o=new IntersectionObserver(function(es){es.forEach(function(e){e.isIntersecting?vis.add(e.target.id):vis.delete(e.target.id);});var t=null;hs.forEach(function(h){if(!t&&vis.has(h.id))t=h.id;});ls.forEach(function(a){a.classList.toggle('is-active',t&&a.getAttribute('href')==='#'+t);});},{rootMargin:'-64px 0px -70% 0px'});hs.forEach(function(h){if(h.id)o.observe(h);});}})();</script>
+</body>
+</html>

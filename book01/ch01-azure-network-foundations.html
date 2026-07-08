@@ -1,0 +1,1312 @@
+<!DOCTYPE html>
+<!--
+  APAF ASSET MANIFEST — ch01-azure-network-foundations.html
+  Book:    Azure Networking Deep Dive (Book01)
+  Chapter: 1 — Azure Network Foundations
+  Stage:   S07 — HTML Assembly  |  Date: 2026-07-07
+  Draft:   v0.1 (pending S08 review)
+
+  Embedded assets:
+    - ../diagrams/CH01-FIG-01-vnet-subnet-nic-layers.svg  (Figure 1.1)
+    - ../diagrams/CH01-FIG-02-ip-address-lifecycle-state.svg  (Figure 1.2)
+
+  External dependencies: NONE — fully self-contained
+  Fonts: system font stack only (Segoe UI / system-ui)
+  JS: inline module, no external libraries
+-->
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Chapter 1 of Azure Networking Deep Dive. Covers VNet architecture, subnet design, NIC and IP addressing, CIDR planning, CLI and Bicep deployment, and a hands-on lab.">
+  <meta property="og:title" content="Azure Network Foundations | Azure Networking Deep Dive">
+  <meta property="og:description" content="Establish the foundational networking model for every Azure architecture pattern in this book.">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="/book01/ch01-azure-network-foundations.html">
+  <meta property="og:image" content="/assets/images/apaf-og-default.png">
+  <meta name="theme-color" content="#0F2D5E">
+  <link rel="canonical" href="/book01/ch01-azure-network-foundations.html">
+  <title>Azure Network Foundations | Azure Networking Deep Dive | APAF</title>
+
+  <!-- APAF theme init — must run before paint to prevent flash of incorrect theme -->
+  <script>
+    (function(){
+      var s=localStorage.getItem('apaf-theme');
+      if(s) document.documentElement.setAttribute('data-theme',s);
+      else if(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)
+        document.documentElement.setAttribute('data-theme','dark');
+    })();
+  </script>
+
+  <style>
+/* ── Reset ────────────────────────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box}
+html{font-size:100%;-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+body{margin:0;padding:0}
+h1,h2,h3,h4,h5,h6,p,blockquote,figure,figcaption,
+ul,ol,li,dl,dt,dd,table,th,td,pre,code{margin:0;padding:0}
+img,svg{display:block;max-width:100%}
+button,input{font:inherit}
+
+/* ── Tokens — Light ──────────────────────────────────────── */
+:root{
+  --c-primary:   #0F2D5E;
+  --c-accent:    #0078D4;
+  --c-success:   #107C10;
+  --c-warning:   #FFB900;
+  --c-error:     #D13438;
+  --c-bg:        #FAF9F8;
+  --c-surface:   #F3F2F1;
+  --c-border:    #EDEBE9;
+  --c-text:      #1B1A19;
+  --c-text2:     #605E5C;
+  --c-link:      #0078D4;
+  --c-link-h:    #0F2D5E;
+  --callout-note-bg:    #EFF6FC; --callout-note-bd:    #0078D4;
+  --callout-tip-bg:     #DFF6DD; --callout-tip-bd:     #107C10;
+  --callout-warn-bg:    #FFF4CE; --callout-warn-bd:    #FFB900;
+  --callout-imp-bg:     #FDE7E9; --callout-imp-bd:     #D13438;
+  --code-bg:     #282C34; --code-text:   #ABB2BF;
+  --code-kw:     #C678DD; --code-str:    #98C379;
+  --code-cmt:    #5C6370; --code-fn:     #61AFEF;
+  --code-num:    #D19A66; --code-var:    #E06C75;
+  --shadow-sm:   0 1px 3px rgba(0,0,0,.12);
+  --shadow-md:   0 4px 6px rgba(0,0,0,.10);
+  --radius:      6px;
+  --font-body:   'Segoe UI',system-ui,-apple-system,sans-serif;
+  --font-mono:   'Cascadia Code',Consolas,'Courier New',monospace;
+}
+
+/* ── Tokens — Dark ───────────────────────────────────────── */
+[data-theme="dark"]{
+  --c-bg:      #1E1E2E; --c-surface: #252535;
+  --c-border:  #3A3A5C; --c-text:    #E2E2F0;
+  --c-text2:   #9090B8; --c-link:    #4DAEF0;
+  --c-link-h:  #80CFFF;
+  --callout-note-bg:    #0D2D42; --callout-note-bd:    #4DAEF0;
+  --callout-tip-bg:     #0D2B0D; --callout-tip-bd:     #4CAF50;
+  --callout-warn-bg:    #2D2200; --callout-warn-bd:    #FFD740;
+  --callout-imp-bg:     #2D0D0F; --callout-imp-bd:     #FF5252;
+}
+
+/* ── Skip links ──────────────────────────────────────────── */
+.skip-link{position:absolute;top:-3rem;left:1rem;padding:.5rem 1rem;
+  background:var(--c-accent);color:#fff;border-radius:var(--radius);
+  font-family:var(--font-body);font-size:.875rem;z-index:9999;
+  transition:top .15s}
+.skip-link:focus{top:.5rem}
+
+/* ── Site header ─────────────────────────────────────────── */
+.site-header{
+  position:sticky;top:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:.625rem 1.5rem;
+  background:var(--c-primary);color:#fff;
+  box-shadow:var(--shadow-md)
+}
+.site-header__brand{display:flex;align-items:center;gap:.75rem;
+  text-decoration:none;color:#fff}
+.site-header__wordmark{font-family:var(--font-body);font-size:1rem;
+  font-weight:700;letter-spacing:.03em}
+.site-header__subtitle{font-size:.75rem;opacity:.75;font-weight:400}
+.site-header__controls{display:flex;align-items:center;gap:.75rem}
+.btn-icon{background:transparent;border:1px solid rgba(255,255,255,.3);
+  border-radius:var(--radius);color:#fff;cursor:pointer;
+  width:2rem;height:2rem;display:flex;align-items:center;
+  justify-content:center;font-size:.875rem;transition:background .15s}
+.btn-icon:hover{background:rgba(255,255,255,.15)}
+.btn-icon:focus-visible{outline:2px solid #fff;outline-offset:2px}
+
+/* ── Layout grid ─────────────────────────────────────────── */
+.layout{
+  display:grid;
+  grid-template-columns:240px 1fr 220px;
+  grid-template-rows:auto;
+  min-height:calc(100vh - 3rem);
+  background:var(--c-bg)
+}
+@media(max-width:1200px){
+  .layout{grid-template-columns:240px 1fr}
+  .toc-sidebar{display:none}
+}
+@media(max-width:768px){
+  .layout{grid-template-columns:1fr}
+  .nav-sidebar{display:none}
+  .nav-sidebar.is-open{display:block;position:fixed;inset:0;
+    z-index:200;overflow-y:auto}
+}
+
+/* ── Nav sidebar ─────────────────────────────────────────── */
+.nav-sidebar{
+  border-right:1px solid var(--c-border);
+  background:var(--c-surface);
+  padding:1.5rem 0;
+  overflow-y:auto;
+  position:sticky;top:3rem;
+  height:calc(100vh - 3rem)
+}
+.nav-sidebar__section{padding:.25rem 1rem .5rem;
+  font-size:.6875rem;font-weight:700;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--c-text2)}
+.nav-sidebar__list{list-style:none;padding:0;margin:0 0 1.5rem}
+.nav-sidebar__item a{
+  display:block;padding:.4rem 1.25rem;
+  font-family:var(--font-body);font-size:.8125rem;
+  color:var(--c-text2);text-decoration:none;
+  border-left:2px solid transparent;
+  transition:color .15s,border-color .15s,background .15s}
+.nav-sidebar__item a:hover{color:var(--c-text);background:var(--c-border)}
+.nav-sidebar__item--active a{
+  color:var(--c-accent);border-left-color:var(--c-accent);
+  background:rgba(0,120,212,.06);font-weight:600}
+.nav-sidebar__item:focus-within a{outline:2px solid var(--c-accent);outline-offset:-2px}
+
+/* ── Progress bar ────────────────────────────────────────── */
+.progress-bar-wrap{
+  display:flex;align-items:center;gap:.75rem;
+  padding:.75rem 0 0;margin-bottom:1.5rem}
+.progress-bar-track{
+  flex:1;height:4px;border-radius:2px;
+  background:var(--c-border);overflow:hidden}
+.progress-bar-fill{
+  height:100%;border-radius:2px;
+  background:var(--c-accent);
+  transition:width .3s ease}
+.progress-bar-label{
+  font-size:.75rem;color:var(--c-text2);white-space:nowrap}
+
+/* ── Main content ────────────────────────────────────────── */
+.main-content{
+  padding:2rem 2.5rem 4rem;
+  min-width:0;max-width:860px
+}
+@media(max-width:900px){.main-content{padding:1.5rem 1.25rem 3rem}}
+
+/* ── Article header ──────────────────────────────────────── */
+.doc-article__eyebrow{
+  font-size:.75rem;font-weight:700;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--c-accent);margin-bottom:.5rem}
+.doc-article__title{
+  font-family:var(--font-body);font-size:2rem;font-weight:700;
+  color:var(--c-text);line-height:1.2;margin-bottom:.75rem}
+.doc-article__meta{
+  font-size:.8125rem;color:var(--c-text2);margin-bottom:1.5rem;
+  display:flex;flex-wrap:wrap;gap:1rem}
+.doc-article__meta span{display:flex;align-items:center;gap:.25rem}
+
+/* ── Learning objectives ─────────────────────────────────── */
+.learning-objectives{
+  background:var(--c-surface);border:1px solid var(--c-border);
+  border-left:3px solid var(--c-accent);border-radius:var(--radius);
+  padding:1rem 1.25rem;margin-bottom:2rem}
+.learning-objectives__title{
+  font-size:.8125rem;font-weight:700;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--c-accent);margin-bottom:.6rem}
+.learning-objectives ol{padding-left:1.25rem;margin:0}
+.learning-objectives li{
+  font-size:.9rem;color:var(--c-text);line-height:1.55;
+  margin-bottom:.35rem}
+
+/* ── Headings ────────────────────────────────────────────── */
+.doc-article h2{
+  font-size:1.5rem;font-weight:700;color:var(--c-text);
+  padding-top:2rem;margin-bottom:.75rem;
+  border-bottom:1px solid var(--c-border);padding-bottom:.5rem}
+.doc-article h3{
+  font-size:1.2rem;font-weight:700;color:var(--c-text);
+  padding-top:1.5rem;margin-bottom:.6rem}
+.doc-article h4{
+  font-size:1rem;font-weight:600;color:var(--c-text);
+  padding-top:1.25rem;margin-bottom:.5rem}
+.doc-article h2:first-of-type{padding-top:.5rem}
+
+/* ── Body prose ──────────────────────────────────────────── */
+.doc-article p{
+  font-family:var(--font-body);font-size:.9375rem;
+  line-height:1.7;color:var(--c-text);margin-bottom:1rem}
+.doc-article p:last-child{margin-bottom:0}
+.doc-article a{color:var(--c-link);text-decoration:underline;
+  text-underline-offset:2px}
+.doc-article a:hover{color:var(--c-link-h)}
+.doc-article a:focus-visible{outline:2px solid var(--c-accent);
+  outline-offset:2px;border-radius:2px}
+.doc-article strong{font-weight:700}
+.doc-article code{
+  font-family:var(--font-mono);font-size:.8125rem;
+  background:var(--c-surface);border:1px solid var(--c-border);
+  border-radius:3px;padding:.1em .35em;color:var(--c-text)}
+[data-theme="dark"] .doc-article code{
+  background:#2A2A3E;border-color:#3A3A5C}
+.doc-article hr{border:none;border-top:1px solid var(--c-border);
+  margin:2rem 0}
+.doc-article ul,.doc-article ol{
+  padding-left:1.5rem;margin-bottom:1rem}
+.doc-article li{
+  font-size:.9375rem;line-height:1.7;color:var(--c-text);
+  margin-bottom:.35rem}
+
+/* ── Tables ──────────────────────────────────────────────── */
+.table-wrap{overflow-x:auto;margin-bottom:1.5rem;
+  border-radius:var(--radius);border:1px solid var(--c-border)}
+.apaf-table{width:100%;border-collapse:collapse;
+  font-size:.875rem;font-family:var(--font-body)}
+.apaf-table th{
+  background:var(--c-surface);color:var(--c-text);
+  font-weight:700;font-size:.8125rem;text-align:left;
+  padding:.6rem .875rem;border-bottom:2px solid var(--c-border)}
+.apaf-table td{
+  padding:.55rem .875rem;color:var(--c-text);
+  border-bottom:1px solid var(--c-border);vertical-align:top}
+.apaf-table tr:last-child td{border-bottom:none}
+.apaf-table tr:nth-child(even) td{background:var(--c-surface)}
+.apaf-table code{font-family:var(--font-mono);font-size:.8rem}
+
+/* ── Callout boxes ───────────────────────────────────────── */
+.callout{
+  display:flex;gap:.75rem;padding:.875rem 1rem;
+  border-radius:var(--radius);margin:1rem 0 1.25rem;
+  border-left:3px solid}
+.callout__icon{font-size:1rem;flex-shrink:0;padding-top:.05rem}
+.callout__body{flex:1;min-width:0}
+.callout__label{font-size:.75rem;font-weight:700;
+  letter-spacing:.07em;text-transform:uppercase;margin-bottom:.3rem}
+.callout__text{font-size:.875rem;line-height:1.6;color:var(--c-text)}
+.callout__text a{color:inherit;text-decoration:underline}
+.callout__text code{background:rgba(0,0,0,.08);
+  border-radius:2px;padding:.1em .3em}
+.callout--note{background:var(--callout-note-bg);border-color:var(--callout-note-bd)}
+.callout--note .callout__label{color:var(--callout-note-bd)}
+.callout--tip{background:var(--callout-tip-bg);border-color:var(--callout-tip-bd)}
+.callout--tip .callout__label{color:var(--callout-tip-bd)}
+.callout--warning{background:var(--callout-warn-bg);border-color:var(--callout-warn-bd)}
+.callout--warning .callout__label{color:#7A5C00}
+[data-theme="dark"] .callout--warning .callout__label{color:var(--callout-warn-bd)}
+.callout--important{background:var(--callout-imp-bg);border-color:var(--callout-imp-bd)}
+.callout--important .callout__label{color:var(--callout-imp-bd)}
+
+/* ── Code viewer ─────────────────────────────────────────── */
+.code-viewer{margin:1rem 0 1.5rem;border-radius:var(--radius);
+  overflow:hidden;box-shadow:var(--shadow-sm)}
+.code-viewer__header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:.4rem .875rem;background:#21252B;
+  border-bottom:1px solid #181A1F}
+.code-viewer__lang{font-family:var(--font-mono);font-size:.7rem;
+  color:#8B9099;letter-spacing:.06em;text-transform:uppercase}
+.code-viewer__copy{
+  background:transparent;border:1px solid #3A4048;
+  color:#8B9099;border-radius:3px;padding:.2rem .6rem;
+  font-size:.7rem;cursor:pointer;font-family:var(--font-body);
+  transition:color .15s,border-color .15s}
+.code-viewer__copy:hover{color:#ABB2BF;border-color:#5A6270}
+.code-viewer__copy:focus-visible{outline:2px solid var(--c-accent);
+  outline-offset:2px}
+.code-viewer__pre{
+  margin:0;padding:1rem;overflow-x:auto;
+  background:var(--code-bg);
+  font-family:var(--font-mono);font-size:.8125rem;
+  line-height:1.65;color:var(--code-text)}
+/* Syntax tokens */
+.tok-cmt{color:var(--code-cmt);font-style:italic}
+.tok-kw{color:var(--code-kw)}
+.tok-str{color:var(--code-str)}
+.tok-fn{color:var(--code-fn)}
+.tok-num{color:var(--code-num)}
+.tok-var{color:var(--code-var)}
+.tok-flag{color:#56B6C2}
+.tok-param{color:#D19A66}
+
+/* ── Figures / diagrams ──────────────────────────────────── */
+.apaf-figure{margin:1.5rem 0 2rem;text-align:center}
+.apaf-figure img,.apaf-figure svg{
+  max-width:100%;height:auto;border-radius:var(--radius);
+  border:1px solid var(--c-border)}
+.apaf-figure figcaption{
+  font-family:var(--font-body);font-size:.8125rem;
+  font-style:italic;color:var(--c-text2);margin-top:.6rem}
+
+/* ── Lab tasks ───────────────────────────────────────────── */
+.lab-task{
+  border:1px solid var(--c-border);border-radius:var(--radius);
+  margin-bottom:1.5rem;overflow:hidden}
+.lab-task__header{
+  display:flex;align-items:center;gap:.75rem;
+  padding:.6rem 1rem;background:var(--c-surface);
+  border-bottom:1px solid var(--c-border)}
+.lab-task__badge{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:1.5rem;height:1.5rem;border-radius:50%;
+  background:var(--c-accent);color:#fff;
+  font-size:.75rem;font-weight:700;flex-shrink:0}
+.lab-task__title{font-size:.9rem;font-weight:700;color:var(--c-text)}
+.lab-task__body{padding:.875rem 1rem}
+.lab-task__body p{margin-bottom:.75rem}
+.lab-task__body p:last-child{margin-bottom:0}
+
+/* ── TOC sidebar ─────────────────────────────────────────── */
+.toc-sidebar{
+  padding:1.5rem 1rem;
+  border-left:1px solid var(--c-border);
+  position:sticky;top:3rem;
+  height:calc(100vh - 3rem);overflow-y:auto}
+.toc-sidebar__heading{
+  font-size:.6875rem;font-weight:700;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--c-text2);margin-bottom:.75rem}
+.toc-sidebar__list{list-style:none;padding:0;margin:0}
+.toc-sidebar__list li{margin-bottom:.2rem}
+.toc-sidebar__list a{
+  font-size:.8rem;color:var(--c-text2);text-decoration:none;
+  display:block;padding:.2rem .5rem;border-radius:3px;
+  border-left:2px solid transparent;transition:all .15s}
+.toc-sidebar__list a:hover{color:var(--c-accent);background:rgba(0,120,212,.05)}
+.toc-sidebar__list a.is-active{
+  color:var(--c-accent);border-left-color:var(--c-accent);
+  background:rgba(0,120,212,.06)}
+.toc-sidebar__list li.toc-h4 a{padding-left:1.25rem;font-size:.77rem}
+
+/* ── Site footer ─────────────────────────────────────────── */
+.site-footer{
+  background:var(--c-surface);border-top:1px solid var(--c-border);
+  padding:1.5rem 2rem}
+.chapter-nav{display:flex;justify-content:space-between;
+  align-items:center;max-width:860px}
+.chapter-nav__link{
+  display:flex;flex-direction:column;gap:.2rem;
+  text-decoration:none;padding:.75rem 1rem;
+  border:1px solid var(--c-border);border-radius:var(--radius);
+  background:var(--c-bg);transition:border-color .15s,box-shadow .15s;
+  max-width:260px}
+.chapter-nav__link:hover{border-color:var(--c-accent);
+  box-shadow:var(--shadow-sm)}
+.chapter-nav__dir{font-size:.7rem;font-weight:700;
+  letter-spacing:.07em;text-transform:uppercase;color:var(--c-text2)}
+.chapter-nav__title{font-size:.875rem;font-weight:600;color:var(--c-accent)}
+.chapter-nav__spacer{flex:1}
+.apaf-footer-copy{
+  text-align:center;margin-top:1.25rem;
+  font-size:.75rem;color:var(--c-text2)}
+  </style>
+</head>
+<body>
+
+<a class="skip-link" href="#main-content">Skip to main content</a>
+<a class="skip-link" href="#site-nav">Skip to navigation</a>
+
+<!-- ═══ SITE HEADER ═══════════════════════════════════════ -->
+<header class="site-header" role="banner">
+  <a class="site-header__brand" href="../index.html">
+    <span class="site-header__wordmark">APAF</span>
+    <span class="site-header__subtitle">Azure Networking Deep Dive</span>
+  </a>
+  <div class="site-header__controls">
+    <button class="btn-icon" id="theme-toggle" aria-label="Toggle dark mode" title="Toggle dark mode">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+        <path id="icon-sun" d="M8 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6zm0 1a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM8 0a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 0zm0 13a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 13zm8-5a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2a.5.5 0 0 1 .5.5zM3 8a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2A.5.5 0 0 1 3 8zm10.657-5.657a.5.5 0 0 1 0 .707l-1.414 1.415a.5.5 0 1 1-.707-.708l1.414-1.414a.5.5 0 0 1 .707 0zm-9.193 9.193a.5.5 0 0 1 0 .707L3.05 13.657a.5.5 0 0 1-.707-.707l1.414-1.414a.5.5 0 0 1 .707 0zm9.193 2.121a.5.5 0 0 1-.707 0l-1.414-1.414a.5.5 0 0 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .707zM4.464 4.465a.5.5 0 0 1-.707 0L2.343 3.05a.5.5 0 1 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .708z"/>
+      </svg>
+    </button>
+  </div>
+</header>
+
+<!-- ═══ PAGE LAYOUT ════════════════════════════════════════ -->
+<div class="layout">
+
+<!-- ── Nav sidebar ──────────────────────────────────────── -->
+<nav class="nav-sidebar" id="site-nav" aria-label="Book chapters">
+  <p class="nav-sidebar__section">Azure Networking Deep Dive</p>
+  <ul class="nav-sidebar__list">
+    <li class="nav-sidebar__item nav-sidebar__item--active">
+      <a href="ch01-azure-network-foundations.html" aria-current="page">1. Azure Network Foundations</a>
+    </li>
+    <li class="nav-sidebar__item">
+      <a href="ch02-routing-traffic-control.html">2. Routing and Traffic Control</a>
+    </li>
+    <li class="nav-sidebar__item">
+      <a href="ch03-hub-spoke-topology.html">3. Hub-and-Spoke Topology</a>
+    </li>
+    <li class="nav-sidebar__item">
+      <a href="ch04-azure-virtual-wan.html">4. Azure Virtual WAN</a>
+    </li>
+    <li class="nav-sidebar__item">
+      <a href="ch05-vpn-gateway.html">5. Hybrid: VPN Gateway</a>
+    </li>
+    <li class="nav-sidebar__item">
+      <a href="ch06-expressroute.html">6. Hybrid: ExpressRoute</a>
+    </li>
+    <li class="nav-sidebar__item">
+      <a href="ch07-private-link.html">7. Private Link and Endpoints</a>
+    </li>
+    <li class="nav-sidebar__item">
+      <a href="ch08-load-balancer-appgw.html">8. Load Balancer and App Gateway</a>
+    </li>
+    <li class="nav-sidebar__item">
+      <a href="ch09-front-door-cdn.html">9. Azure Front Door and CDN</a>
+    </li>
+    <li class="nav-sidebar__item">
+      <a href="ch10-network-security.html">10. Network Security</a>
+    </li>
+    <li class="nav-sidebar__item">
+      <a href="ch11-dns-architecture.html">11. DNS Architecture</a>
+    </li>
+    <li class="nav-sidebar__item">
+      <a href="ch12-monitoring-troubleshooting.html">12. Monitoring and Troubleshooting</a>
+    </li>
+  </ul>
+</nav>
+
+<!-- ── Main content ─────────────────────────────────────── -->
+<main class="main-content" id="main-content">
+<article class="doc-article">
+
+  <!-- Chapter header -->
+  <header>
+    <div class="progress-bar-wrap" role="progressbar" aria-valuenow="1" aria-valuemin="1" aria-valuemax="12" aria-label="Chapter 1 of 12">
+      <div class="progress-bar-track">
+        <div class="progress-bar-fill" style="width:8.33%"></div>
+      </div>
+      <span class="progress-bar-label">Chapter 1 of 12</span>
+    </div>
+    <p class="doc-article__eyebrow">Book 01 — Azure Networking Deep Dive</p>
+    <h1 class="doc-article__title" id="chapter-title">Azure Network Foundations</h1>
+    <div class="doc-article__meta">
+      <span>&#128197; <time datetime="2026-07-07">July 7, 2026</time></span>
+      <span>&#128337; 35 min read</span>
+      <span>&#9881;&#65039; Lab included</span>
+    </div>
+  </header>
+
+  <!-- Introduction -->
+  <p>Every Azure architecture in this book relies on the constructs you build here. Before you configure an ExpressRoute circuit, design a hub-and-spoke topology, or attach a private endpoint, you need a precise understanding of how Azure constructs an isolated network, how subnets divide that network into functional segments, and how a network interface card (NIC) connects compute to the underlying network fabric. This chapter establishes those foundations.</p>
+  <p>You will work through six sections. The first two build the conceptual model: what a Virtual Network (VNet) is at the platform level, and how to design an address space that will not require a re-IP project six months later. The middle two translate that model into precise subnet design and IP address management. The final two move from theory to deployment code and a hands-on lab where you verify every concept against a live Azure subscription.</p>
+
+  <!-- Learning objectives -->
+  <aside class="learning-objectives" aria-label="Learning objectives">
+    <p class="learning-objectives__title">Learning Objectives</p>
+    <ol>
+      <li>Describe the Azure Virtual Network (VNet) architecture and explain how Azure's SDN layer enforces VNet isolation.</li>
+      <li>Design a VNet address space using RFC 1918 ranges, accounting for growth headroom and the constraints imposed by VNet peering and private endpoints.</li>
+      <li>Identify the five Azure-reserved IP addresses in every subnet and calculate the usable host count for a given CIDR prefix.</li>
+      <li>Distinguish the role of a NIC as the attachment point between a virtual machine and a subnet, and configure static and dynamic IP assignments.</li>
+      <li>Deploy a VNet with multiple subnets using Azure CLI and Bicep.</li>
+      <li>Read the effective routes table on a NIC to validate that traffic follows the expected path.</li>
+    </ol>
+  </aside>
+
+  <!-- ════════════════════════════════════════════
+       § 1 — THE AZURE VIRTUAL NETWORK MODEL
+  ═════════════════════════════════════════════ -->
+  <h2 id="s1-vnet-model">The Azure Virtual Network Model</h2>
+  <p>A Virtual Network (VNet) is Azure's software-defined networking (SDN) primitive. It provides an isolated network boundary within which your resources communicate privately, and it is the foundation for every connectivity pattern in this book. Understanding what VNets are — and what they are not — is the prerequisite for every design decision that follows.</p>
+
+  <h3 id="s1-1-sdn">How Azure SDN Enforces VNet Isolation</h3>
+  <p>VNet isolation is enforced by the Azure host networking stack, not by a physical switch, firewall, or router. When you create a VNet and deploy resources into it, the Azure Network Controller programs policies onto the Hyper-V virtual switch on each physical host that holds those resources. Those policies block any packet that attempts to cross a VNet boundary without explicit configuration — VNet peering, a gateway, or a network virtual appliance (NVA).</p>
+  <p>This software-defined model has a critical implication: there is no default path between two VNets. A virtual machine in <code>vnet-spoke-001</code> cannot reach a virtual machine in <code>vnet-spoke-002</code> unless you explicitly configure connectivity. Traffic between unconnected VNets does not traverse a shared switching fabric — it does not flow at all. The VNet boundary is enforced before a packet ever reaches the wire.</p>
+  <p>The host-based enforcement model also means that VNet isolation is not a function of IP addressing alone. Two VNets can share the same address space — 10.0.0.0/16 in both — and Azure will not flag a conflict at creation time, because the isolation is independent of address space. The conflict surfaces only when you attempt to connect them. Chapter 3 covers VNet peering and the constraints that address space overlap imposes on hub-and-spoke topologies.</p>
+
+  <div class="callout callout--note" role="note" aria-label="Note">
+    <span class="callout__icon" aria-hidden="true">&#8505;&#65039;</span>
+    <div class="callout__body">
+      <p class="callout__label">Note</p>
+      <p class="callout__text">VNets support encryption at the VNet level. When you enable VNet encryption, Azure encrypts VM-to-VM traffic within the VNet and across peered VNets. Encryption is configured at VNet creation and applies transparently to all VM traffic. Review the VNet encryption documentation before enabling it in high-throughput environments, as the supported VM SKU list is specific.</p>
+    </div>
+  </div>
+
+  <h3 id="s1-2-scope">VNet Scope: Regional and Subscription-Bound</h3>
+  <p>A VNet exists in a single Azure region and belongs to a single subscription. You cannot stretch a VNet across two regions or move it between subscriptions without recreating it. This regional scope is a design constraint that all architects must internalise before CIDR planning begins.</p>
+  <p>A VNet can hold multiple address spaces. You can add address spaces after creation without downtime, which allows you to expand an existing VNet when workload growth exceeds the original allocation. Do not treat this capability as an excuse to under-provision at creation time — adding non-contiguous address spaces fragments your address plan and complicates route summarisation in hybrid scenarios.</p>
+  <p>VNets and their subnets span all availability zones within a region automatically. You do not need to partition subnets by zone to accommodate zonal resources. A virtual machine pinned to Zone 1 and a virtual machine pinned to Zone 3 can share the same subnet without any special configuration. The subnet is a flat Layer 2 domain at the VNet level; the availability zone assignment is a compute scheduling decision, not a networking boundary. This is counterintuitive to engineers with on-premises data centre experience, where VLANs and physical rack placement are closely related.</p>
+
+  <div class="callout callout--note" role="note" aria-label="Note">
+    <span class="callout__icon" aria-hidden="true">&#8505;&#65039;</span>
+    <div class="callout__body">
+      <p class="callout__label">Note</p>
+      <p class="callout__text">VNets cannot span regions natively. Chapter 4 covers Azure Virtual WAN (vWAN), which provides a Microsoft-managed hub that connects VNets across regions through a global transit network.</p>
+    </div>
+  </div>
+
+  <!-- FIG-01 -->
+  <figure class="apaf-figure" id="fig-1-1">
+    <img
+      src="../diagrams/CH01-FIG-01-vnet-subnet-nic-layers.svg"
+      alt="Diagram showing an Azure subscription containing a resource group, which contains a VNet with address space 10.10.0.0/16. Inside the VNet are three subnets: GatewaySubnet at 10.10.0.0/26, snet-app-prod at 10.10.1.0/24, and snet-data-prod at 10.10.2.0/24. A virtual machine in snet-app-prod is connected via a NIC with static private IP 10.10.1.4."
+      width="1100"
+      height="620"
+      loading="eager"
+      decoding="async">
+    <figcaption><strong>Figure 1.1</strong> — Azure Virtual Network anatomy: subscription scope, VNet address space, subnets, and NIC attachment to a virtual machine</figcaption>
+  </figure>
+
+  <h3 id="s1-3-limits">VNet Limits You Must Know Before You Design</h3>
+  <p>Certain VNet limits constrain design choices directly. The table below shows the limits most relevant to production architects.</p>
+
+  <div class="table-wrap">
+    <table class="apaf-table">
+      <thead>
+        <tr><th>Limit</th><th>Default Value</th><th>Notes</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Address spaces per VNet</td><td>5</td><td>Expandable via Azure Support request</td></tr>
+        <tr><td>Subnets per VNet</td><td>3,000</td><td>Rarely the bottleneck in practice</td></tr>
+        <tr><td>VNet peerings per VNet</td><td>500</td><td>Can become a bottleneck in large hub-and-spoke topologies</td></tr>
+        <tr><td>NIC IP configurations per NIC</td><td>2,000</td><td>Applies to Standard SKU NICs</td></tr>
+        <tr><td>IPv4 VNet address space range</td><td>/8 to /29</td><td>APAF baseline recommendation: /16 per spoke VNet</td></tr>
+        <tr><td>IPv6 subnet prefix length</td><td><code>/64</code> (fixed)</td><td>All IPv6 subnets in a dual-stack VNet must use exactly /64</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout callout--note" role="note" aria-label="Note">
+    <span class="callout__icon" aria-hidden="true">&#8505;&#65039;</span>
+    <div class="callout__body">
+      <p class="callout__label">Note</p>
+      <p class="callout__text">Verify these limits against the current <a href="https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/azure-subscription-service-limits" target="_blank" rel="noopener">Azure subscription and service limits</a> page before finalising a design. Microsoft updates these values without versioning the page, and the VNet peering limit in particular has changed multiple times.</p>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════
+       § 2 — ADDRESS SPACES AND SUBNETS
+  ═════════════════════════════════════════════ -->
+  <h2 id="s2-address-subnets">Address Spaces and Subnets</h2>
+  <p>The address plan you create at VNet construction time constrains every future deployment decision. A subnet that is too small blocks a blue/green deployment. An address space that overlaps with your on-premises estate prevents you from connecting the VNet to your hub. The decisions in this section are among the highest-impact, lowest-reversibility choices in Azure networking. Make them deliberately.</p>
+
+  <h3 id="s2-1-rfc1918">Choosing Your RFC 1918 Ranges</h3>
+  <p>Azure VNets must use private IP addressing from RFC 1918 ranges. Three blocks are available, and each carries a different collision risk in enterprise environments:</p>
+  <ul>
+    <li><code>10.0.0.0/8</code> — the largest available range. Most enterprises already use portions of this block on-premises, making overlap likely without careful coordination with your network team.</li>
+    <li><code>172.16.0.0/12</code> — less common in corporate environments, which makes it lower-risk for Azure-specific allocations.</li>
+    <li><code>192.168.0.0/16</code> — frequently used in branch offices, home networks, and legacy point-to-site VPN configurations. Avoid this range for spoke VNets in any hybrid topology.</li>
+  </ul>
+  <p>APAF recommends that you carve your entire Azure address plan from a dedicated supernet within <code>10.0.0.0/8</code>. For example, reserve <code>10.100.0.0/14</code> exclusively for all Azure VNets in your organisation, subdivide it by region and environment (production, staging, development), and record every allocation in your IPAM system before creating any VNet. This approach prevents overlap and makes block delegation predictable as the organisation grows.</p>
+  <p>This supernet reservation must be coordinated with your network team before you create a single VNet. In most enterprises, the network team controls the RFC 1918 address space allocation. File a formal IPAM request that identifies your Azure supernet, and obtain sign-off from the network architect before you proceed.</p>
+
+  <div class="callout callout--warning" role="note" aria-label="Warning">
+    <span class="callout__icon" aria-hidden="true">&#9888;&#65039;</span>
+    <div class="callout__body">
+      <p class="callout__label">Warning</p>
+      <p class="callout__text">If your Azure VNet address space overlaps with any network reachable via ExpressRoute, VPN Gateway, or VNet peering, routing will break silently or peering will fail at creation time. Azure cannot validate for overlap against your on-premises routing table — it has no visibility into it. Audit your on-premises IP addressing scheme before you allocate Azure address ranges.</p>
+    </div>
+  </div>
+
+  <h3 id="s2-2-subnets">Subnet Fundamentals</h3>
+  <p>A subnet is a child of the VNet address space. Its CIDR range must fall entirely within one of the VNet's address spaces and cannot overlap with any other subnet in the same VNet. Every NIC must attach to a subnet — a NIC cannot attach directly to a VNet.</p>
+  <p>Azure reserves five IP addresses in every subnet. These addresses are unavailable for assignment to resources regardless of subnet size:</p>
+
+  <div class="table-wrap">
+    <table class="apaf-table">
+      <thead>
+        <tr><th>Address</th><th>Offset</th><th>Purpose</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>10.10.1.0</code></td><td><code>.0</code></td><td>Network address</td></tr>
+        <tr><td><code>10.10.1.1</code></td><td><code>.1</code></td><td>Default gateway (Azure-managed)</td></tr>
+        <tr><td><code>10.10.1.2</code></td><td><code>.2</code></td><td>Azure DNS</td></tr>
+        <tr><td><code>10.10.1.3</code></td><td><code>.3</code></td><td>Azure DNS (reserved for future use)</td></tr>
+        <tr><td><code>10.10.1.255</code></td><td><code>.255</code></td><td>Broadcast address</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>The table above uses <code>10.10.1.0/24</code> as the example subnet. Apply the same pattern to any prefix: the first four addresses and the last address are always reserved.</p>
+  <p>Calculate usable hosts using the formula <strong>usable = 2<sup>n</sup> &minus; 5</strong>, where n is the number of host bits:</p>
+  <ul>
+    <li><code>/24</code> — 256 total, <strong>251 usable</strong></li>
+    <li><code>/27</code> — 32 total, <strong>27 usable</strong></li>
+    <li><code>/28</code> — 16 total, <strong>11 usable</strong></li>
+    <li><code>/29</code> — 8 total, <strong>3 usable</strong> — the minimum viable subnet, sufficient only for tightly constrained gateway resources</li>
+  </ul>
+  <p>Reserve <code>/29</code> subnets for deployments where the resource count is known and fixed. For application subnets, start at <code>/24</code> and increase as workload sizing demands.</p>
+
+  <h3 id="s2-3-special">Special-Purpose Subnets</h3>
+  <p>Four subnet names are reserved by Azure for specific platform services. Use the exact name shown in the table — no variations, no appended prefixes or suffixes. Azure identifies these subnets by name to inject platform-managed gateway and security resources, and an incorrect name causes deployment failures that produce misleading error messages.</p>
+
+  <div class="table-wrap">
+    <table class="apaf-table">
+      <thead>
+        <tr><th>Subnet Name</th><th>Required Exact Name</th><th>Minimum Size</th><th>APAF Rec.</th><th>Purpose</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Gateway subnet</td><td><code>GatewaySubnet</code></td><td>/27</td><td>/26</td><td>VPN Gateway, ExpressRoute Gateway</td></tr>
+        <tr><td>Firewall subnet</td><td><code>AzureFirewallSubnet</code></td><td>/26</td><td>/26</td><td>Azure Firewall</td></tr>
+        <tr><td>Bastion subnet</td><td><code>AzureBastionSubnet</code></td><td>/26</td><td>/26</td><td>Azure Bastion</td></tr>
+        <tr><td>Route Server subnet</td><td><code>RouteServerSubnet</code></td><td>/27</td><td>/27</td><td>Azure Route Server</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>For <code>GatewaySubnet</code>, the /27 minimum applies to all current VPN Gateway and ExpressRoute Gateway SKUs. The historical /29 minimum applied only to the Basic VPN Gateway SKU, which was retired along with Basic public IP addresses on September 30, 2025. Use /26 for <code>GatewaySubnet</code> in all new designs to accommodate active/active gateway configurations and future gateway scale unit increases.</p>
+
+  <div class="callout callout--important" role="note" aria-label="Important">
+    <span class="callout__icon" aria-hidden="true">&#128681;</span>
+    <div class="callout__body">
+      <p class="callout__label">Important</p>
+      <p class="callout__text"><code>GatewaySubnet</code> must not contain any resources other than gateway instances. Placing a virtual machine or any other resource type in <code>GatewaySubnet</code> is unsupported and may cause gateway deployments to fail. User-defined routes with a <code>0.0.0.0/0</code> destination and network security groups (NSGs) are not supported on <code>GatewaySubnet</code>. If you apply a route table to <code>GatewaySubnet</code>, ensure it contains only specific routes to on-premises prefixes — never a default route pointing to an NVA.</p>
+    </div>
+  </div>
+
+  <h3 id="s2-4-delegation">Subnet Delegation</h3>
+  <p>Subnet delegation authorises a specific Azure service to deploy resources directly into a subnet using the platform's network injection mechanism. Services that use delegation include Azure SQL Managed Instance (SQL MI), App Service Environments (ASE v3), Azure API Management (stv2), and Azure NetApp Files.</p>
+  <p>Whether other resources can co-exist in a delegated subnet depends entirely on the delegated service. Some services require a dedicated subnet — SQL MI, for example, does not permit any other resource types in its delegated subnet, and deployment into a mixed subnet will fail. Other services permit co-existence with virtual machines and other workloads. Check the service-specific documentation before allocating address space for a delegated subnet, because the exclusivity model and sizing requirements differ significantly across services.</p>
+
+  <div class="callout callout--important" role="note" aria-label="Important">
+    <span class="callout__icon" aria-hidden="true">&#128681;</span>
+    <div class="callout__body">
+      <p class="callout__label">Important</p>
+      <p class="callout__text">Delegated subnets cannot contain private endpoints, regardless of whether the service uses a shared or dedicated subnet model. If you require private endpoint connectivity for a service deployed in a delegated subnet, you must create a separate subnet for those endpoints.</p>
+    </div>
+  </div>
+
+  <p>When you create a delegated subnet, Azure adds a service-specific network intent policy that restricts deployments to the delegated service type. Removing the delegation requires you to first remove all delegated resources from the subnet — you cannot remove the delegation from a populated subnet.</p>
+
+  <!-- ════════════════════════════════════════════
+       § 3 — NICS AND IP ADDRESSING
+  ═════════════════════════════════════════════ -->
+  <h2 id="s3-nics-ip">Network Interface Cards and IP Addressing</h2>
+  <p>The network interface card (NIC) is the Azure resource that connects a virtual machine to a subnet. Every connectivity troubleshooting path eventually reaches the NIC — effective routes, NSG rules, and IP configurations all attach at this layer. Understanding NIC-level state is not optional for architects who diagnose production networking incidents.</p>
+
+  <h3 id="s3-1-attachment">The NIC as the Azure Network Attachment Point</h3>
+  <p>The relationship between compute and network in Azure follows a strict hierarchy: <strong>VM → NIC → Subnet → VNet</strong>. A virtual machine does not connect to a subnet directly; the NIC mediates that connection. A VM can have multiple NICs, subject to the VM SKU's maximum NIC count. Each NIC belongs to exactly one subnet.</p>
+  <p>Each NIC holds one or more IP configurations. Each IP configuration defines a private IP address from the subnet's range and, optionally, a public IP address resource. NSGs and application security groups (ASGs) attach at the NIC level — not at the VM level. This distinction matters when you write NSG rules that target specific VMs rather than entire subnets, and it is covered in detail in Chapter 10.</p>
+  <p>A single NIC supports up to 2,000 IP configurations on Standard SKU NICs. This limit rarely constrains normal VM deployments, but it becomes relevant in scenarios such as Azure Kubernetes Service nodes where pod IPs are assigned as additional IP configurations on the node's NIC.</p>
+
+  <div class="callout callout--note" role="note" aria-label="Note">
+    <span class="callout__icon" aria-hidden="true">&#8505;&#65039;</span>
+    <div class="callout__body">
+      <p class="callout__label">Note</p>
+      <p class="callout__text">To inspect the current network configuration of a running VM, query the NIC directly: <code>az network nic show --resource-group YOUR-RG --name YOUR-NIC-NAME</code>. This command returns the current NSG associations, IP configurations, and DNS server assignments applied to that NIC.</p>
+    </div>
+  </div>
+
+  <h3 id="s3-2-static-dynamic">Static vs Dynamic IP Assignment</h3>
+  <p>Azure supports two IP assignment methods for private IP addresses on a NIC IP configuration: dynamic and static.</p>
+  <p><strong>Dynamic</strong> is the default method. Azure allocates an address from the subnet's available range using its internal DHCP service and holds that address for the lifetime of the NIC. The address persists across VM stop and start cycles — this is not a renewable DHCP lease. Azure releases a dynamic private IP address only when one of three events occurs: the NIC is deleted, the NIC is reassigned to a different subnet, or the allocation method on that IP configuration is explicitly changed to static with a different address. If you stop and deallocate a VM overnight, its NIC retains the same private IP address when you start it again the next morning.</p>
+  <p><strong>Static</strong> assignment requires you to specify an IP address within the subnet range. Azure validates that the address is not already in use and reserves it permanently. The address is released only when the NIC is deleted. You cannot move a statically assigned IP to another NIC without first deleting the IP configuration.</p>
+  <p>Use static assignment for any resource whose IP address appears in a route table, NSG rule, firewall rule, or DNS record. The following resource types require static private IP assignment:</p>
+  <ul>
+    <li>Azure Firewall instances</li>
+    <li>Azure Bastion hosts</li>
+    <li>VPN Gateways and ExpressRoute Gateways</li>
+    <li>Custom DNS server VMs</li>
+    <li>Network virtual appliances (NVAs)</li>
+    <li>Any VM whose IP address appears in a user-defined route (UDR) next hop</li>
+  </ul>
+
+  <div class="callout callout--tip" role="note" aria-label="Tip">
+    <span class="callout__icon" aria-hidden="true">&#128161;</span>
+    <div class="callout__body">
+      <p class="callout__label">Tip</p>
+      <p class="callout__text">Assign the static IP before you configure any route tables or DNS server settings that reference it. If you configure the route table first and then assign the static IP, a window exists during which the dynamic allocation could assign the intended IP to a different resource before you claim it with the static assignment.</p>
+    </div>
+  </div>
+
+  <h3 id="s3-3-public-ip">Public IP Addresses</h3>
+  <p>Azure public IP addresses are available in two SKUs: Standard and Basic. Use Standard SKU exclusively in all new designs.</p>
+  <p>Standard public IP addresses are zone-redundant by default in all Azure regions that support availability zones. All Standard public IPs — including those previously created without an explicit zone assignment — are now zone-redundant. Standard IPs are closed to inbound traffic by default: an NSG must explicitly allow inbound connections to the associated resource. This is the security-correct posture for all internet-facing resources.</p>
+  <p>Basic public IP addresses were retired on September 30, 2025. Basic IPs remain operational after retirement but are formally unsupported and excluded from Microsoft SLA guarantees. Basic public IPs were open to inbound traffic by default, with NSGs recommended but not enforced — the primary security risk that drove the retirement.</p>
+
+  <div class="callout callout--warning" role="note" aria-label="Warning">
+    <span class="callout__icon" aria-hidden="true">&#9888;&#65039;</span>
+    <div class="callout__body">
+      <p class="callout__label">Warning</p>
+      <p class="callout__text">Basic SKU public IP addresses were retired on September 30, 2025. They remain operational but carry no SLA guarantees and receive no security updates. Do not use Basic SKU public IPs in new deployments. Migrate existing Basic public IPs to Standard SKU as soon as possible using the <a href="https://learn.microsoft.com/en-us/azure/virtual-network/ip-services/public-ip-basic-upgrade-guidance" target="_blank" rel="noopener">Basic to Standard upgrade guidance</a>, which includes an Azure portal automated upgrade tool for common configurations.</p>
+    </div>
+  </div>
+
+  <h3 id="s3-4-ipv6">IPv6 in Azure VNets</h3>
+  <p>Azure VNets support dual-stack configuration: an IPv4 address space and an IPv6 address space coexist in the same VNet. Each subnet in a dual-stack VNet requires both an IPv4 CIDR block and an IPv6 CIDR block. IPv6 subnet prefixes must be exactly <code>/64</code> — this is an Azure platform requirement and is not adjustable. Standard SKU public IPs support IPv6; Basic SKU does not and was retired in September 2025.</p>
+  <p>IPv6-only virtual machines are not supported in Azure. Every NIC must include at least one IPv4 IP configuration. IPv6 provides a second address per NIC for workloads that require it, but you cannot remove the IPv4 address from an Azure VM's NIC.</p>
+  <p>Several widely used Azure services do not support IPv6. Confirm service support before you enable dual-stack on a VNet:</p>
+  <ul>
+    <li><strong>Azure Firewall</strong> does not support IPv6. It operates in a dual-stack VNet but processes only IPv4 traffic. Chapter 10 covers Firewall deployment constraints.</li>
+    <li><strong>VPN Gateway</strong> cannot be used in a VNet where IPv6 is enabled — neither directly nor through a VNet peering with <code>UseRemoteGateway</code> set to true. If you require both IPv6 and hybrid VPN connectivity, evaluate alternative architectures before committing to a dual-stack design.</li>
+    <li><strong>Azure Container Instances</strong> and <strong>Azure Container Apps</strong> do not support IPv6.</li>
+  </ul>
+
+  <div class="callout callout--note" role="note" aria-label="Note">
+    <span class="callout__icon" aria-hidden="true">&#8505;&#65039;</span>
+    <div class="callout__body">
+      <p class="callout__label">Note</p>
+      <p class="callout__text">For most production workloads in 2026, IPv4-only remains the standard deployment pattern in Azure. Enable IPv6 when your organisation has a regulatory compliance requirement for IPv6 readiness, or when your workloads serve users whose ISPs assign IPv6-only addresses.</p>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════
+       § 4 — CIDR PLANNING
+  ═════════════════════════════════════════════ -->
+  <h2 id="s4-cidr">CIDR Planning for Production VNets</h2>
+  <p>Sizing VNets and subnets correctly at design time is more important than any subsequent optimisation. Azure does not support subnet resizing after resources are deployed. To change a subnet's address range, you must first empty it — removing all NICs, service endpoints, and private endpoints from the subnet before modifying its prefix. The decisions you make in this section constrain or enable everything that follows.</p>
+
+  <h3 id="s4-1-mistakes">The Three Sizing Mistakes That Cause Re-IPs</h3>
+  <p>In practice, three mistakes account for the majority of VNet re-IP projects.</p>
+  <p><strong>Sizing subnets for current workload only.</strong> A <code>/27</code> subnet provides 27 usable addresses. That looks sufficient for 10 application server instances — until you need 20 instances for a blue/green deployment, or until 5 private endpoints each consume one address from the same subnet. Size every application subnet for peak load with 50% headroom, plus your projected private endpoint count, plus 5 for Azure reservations.</p>
+  <p><strong>Forgetting the five Azure-reserved addresses.</strong> Engineers who calculate subnet capacity as 2<sup>n</sup> will consistently undercount. A <code>/27</code> has 32 total addresses and 27 usable. Internalise the formula 2<sup>n</sup> &minus; 5 and apply it to every subnet in your design before you write down a single CIDR range.</p>
+  <p><strong>Sizing the VNet address space to fit only current subnets.</strong> A VNet address space that exactly covers your deployed subnets has no room for new subnets — feature teams, security controls, and platform services all generate subnet requirements that you cannot predict at design time. Reserve at least 30% of your VNet address space as unallocated headroom from the start.</p>
+
+  <h3 id="s4-2-method">A Repeatable Sizing Method</h3>
+  <p>Use the following five-step process for every new VNet. Document the inputs and outputs in your IPAM system before you run <code>az network vnet create</code>.</p>
+  <p><strong>Step 1.</strong> List every workload that will deploy into the VNet, including platform services such as Azure Firewall and Azure Bastion if this is a hub VNet.</p>
+  <p><strong>Step 2.</strong> For each application subnet, calculate the required address count: (peak instance count &times; 1.5) + private endpoint count + 5 (Azure-reserved addresses).</p>
+  <p><strong>Step 3.</strong> Round the calculated address count up to the next power of 2 to determine the subnet size. Select the CIDR prefix: a <code>/27</code> gives 32 total (27 usable), a <code>/26</code> gives 64 total (59 usable), a <code>/25</code> gives 128 total (123 usable).</p>
+  <p><strong>Step 4.</strong> Add the fixed-size platform subnets: <code>GatewaySubnet /26</code>, <code>AzureFirewallSubnet /26</code>, <code>AzureBastionSubnet /26</code>.</p>
+  <p><strong>Step 5.</strong> Sum all subnet address counts, multiply by 1.3 to add 30% headroom, and select the VNet address space CIDR that contains the total.</p>
+  <p>The table below applies this method to a typical three-tier web application deployed in a hub VNet.</p>
+
+  <div class="table-wrap">
+    <table class="apaf-table">
+      <thead>
+        <tr><th>Subnet</th><th>Workload</th><th>Calculation</th><th>CIDR</th><th>Usable</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><code>snet-web-prod</code></td><td>4 web nodes</td><td>(4 &times; 1.5) + 3 PE + 5 = 14</td><td><code>/27</code></td><td>27</td></tr>
+        <tr><td><code>snet-app-prod</code></td><td>8 app nodes</td><td>(8 &times; 1.5) + 5 PE + 5 = 22</td><td><code>/27</code></td><td>27</td></tr>
+        <tr><td><code>snet-data-prod</code></td><td>2 SQL MI nodes</td><td>(2 &times; 1.5) + 3 PE + 5 = 11</td><td><code>/28</code></td><td>11</td></tr>
+        <tr><td><code>AzureFirewallSubnet</code></td><td>Azure Firewall</td><td>Fixed /26</td><td><code>/26</code></td><td>59</td></tr>
+        <tr><td><code>GatewaySubnet</code></td><td>VPN/ER Gateway</td><td>Fixed /26</td><td><code>/26</code></td><td>59</td></tr>
+        <tr><td><strong>Subtotal</strong></td><td>—</td><td>27+27+16+64+64 = 198</td><td>—</td><td>—</td></tr>
+        <tr><td><strong>VNet with 30% headroom</strong></td><td>—</td><td>198 &times; 1.3 &asymp; 258 &rarr; /24 = 256</td><td><code>/24</code></td><td>251</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>A <code>/24</code> fits the current subnets but leaves only 53 unallocated addresses — barely enough for one additional <code>/26</code>. In production, choose a <code>/22</code> (1,022 usable after reserved) to give the team room to add workloads, staging environments, and private endpoint subnets over the next two to three years.</p>
+
+  <h3 id="s4-3-overlap">Overlapping Address Space: The Silent Killer</h3>
+  <p>Azure does not prevent you from creating VNets with overlapping address spaces in the same subscription. The platform validates overlap only at the moment you attempt to connect two VNets through peering, a gateway, or Virtual WAN. By that time, resources may be deployed and running in both VNets, making remediation expensive.</p>
+  <p>Overlapping address space causes three distinct failure modes depending on the topology:</p>
+  <p><strong>VNet peering fails at creation.</strong> When you attempt to peer <code>vnet-spoke-001</code> (10.10.0.0/16) with <code>vnet-hub-001</code> (10.10.0.0/16), the peering creation request returns an overlap error immediately. You cannot create the peering until one of the address spaces changes — which first requires that you empty all subnets in the affected range.</p>
+  <p><strong>ExpressRoute routes traffic to the wrong destination.</strong> When both your Azure VNet and your on-premises network advertise the same prefix, the ExpressRoute gateway receives competing route advertisements. Traffic intended for Azure may travel down the ExpressRoute circuit toward on-premises, and traffic from on-premises may loop back toward Azure. This failure mode is especially dangerous for database subnets, where split-brain routing can cause writes to land in the wrong environment.</p>
+  <p><strong>Private endpoint DNS resolution breaks.</strong> A private endpoint whose IP address falls within a range also advertised from on-premises can produce a DNS response pointing to an address that the on-premises resolver routes to the wrong destination, bypassing the private endpoint entirely.</p>
+  <p>Before you allocate a new range, run the following command to audit existing VNet address spaces in the subscription:</p>
+
+  <div class="code-viewer">
+    <div class="code-viewer__header">
+      <span class="code-viewer__lang">bash</span>
+      <button class="code-viewer__copy" data-copy-target="code-audit" aria-label="Copy code to clipboard">Copy</button>
+    </div>
+    <pre class="code-viewer__pre" id="code-audit"><code><span class="tok-cmt"># Audit VNet address spaces in the current subscription before allocating a new range</span>
+az network vnet list \
+  <span class="tok-flag">--query</span> <span class="tok-str">"[].{Name:name, Prefixes:addressSpace.addressPrefixes}"</span> \
+  <span class="tok-flag">--output</span> table</code></pre>
+  </div>
+
+  <p>Cross-reference the output against your IPAM system and your on-premises routing table before finalising any new VNet address allocation.</p>
+
+  <div class="callout callout--important" role="note" aria-label="Important">
+    <span class="callout__icon" aria-hidden="true">&#128681;</span>
+    <div class="callout__body">
+      <p class="callout__label">Important</p>
+      <p class="callout__text">Azure does not prevent the creation of VNets with overlapping address spaces — it only surfaces the conflict at connection time. Audit address space in your IPAM system at design time. Discovering the conflict at peering time is significantly more expensive to remediate.</p>
+    </div>
+  </div>
+
+
+  <!-- ════════════════════════════════════════════
+       § 5 — DEPLOYING VNETS: CLI AND BICEP
+  ═════════════════════════════════════════════ -->
+  <h2 id="s5-deploy">Deploying VNets: Azure CLI and Bicep</h2>
+  <p>Understanding the deployment tools is not optional for architects. Your team will need to review infrastructure-as-code pull requests, diagnose deployment failures, and translate conceptual designs into working declarations. This section covers the two tools you will use in every chapter of this book: Azure CLI for interactive verification and iteration, and Bicep for repeatable, version-controlled infrastructure.</p>
+
+  <h3 id="s5-1-cli">Azure CLI: Creating a VNet with Subnets</h3>
+  <p>The minimal <code>az network vnet create</code> command creates a VNet and one subnet simultaneously. For a production VNet, you typically create the VNet first and add subnets individually to maintain explicit control over naming and address ranges.</p>
+
+  <div class="code-viewer">
+    <div class="code-viewer__header">
+      <span class="code-viewer__lang">bash</span>
+      <button class="code-viewer__copy" data-copy-target="code-ce01" aria-label="Copy CE-01 to clipboard">Copy</button>
+    </div>
+    <pre class="code-viewer__pre" id="code-ce01"><code><span class="tok-cmt"># CE-01: Minimal VNet with one subnet (APAF naming convention)</span>
+az network vnet create \
+  <span class="tok-flag">--name</span>           vnet-spoke-prod-eus2-001 \
+  <span class="tok-flag">--resource-group</span> rg-networking-prod-eus2-001 \
+  <span class="tok-flag">--location</span>       eastus2 \
+  <span class="tok-flag">--address-prefixes</span> 10.10.0.0/22 \
+  <span class="tok-flag">--subnet-name</span>    snet-app-prod \
+  <span class="tok-flag">--subnet-prefixes</span> 10.10.1.0/24</code></pre>
+  </div>
+
+  <p>Note that both <code>--address-prefixes</code> and <code>--subnet-prefixes</code> take the plural form. The singular <code>--address-prefix</code> and <code>--subnet-prefix</code> forms are accepted but marked as deprecated in the Azure CLI and will be removed in a future version. Use the plural form in all new scripts.</p>
+  <p>After the VNet is created, add each additional subnet with <code>az network vnet subnet create</code>:</p>
+
+  <div class="code-viewer">
+    <div class="code-viewer__header">
+      <span class="code-viewer__lang">bash</span>
+      <button class="code-viewer__copy" data-copy-target="code-ce02" aria-label="Copy CE-02 to clipboard">Copy</button>
+    </div>
+    <pre class="code-viewer__pre" id="code-ce02"><code><span class="tok-cmt"># CE-02: Add additional subnets after VNet creation</span>
+<span class="tok-var">VNET</span>=<span class="tok-str">"vnet-spoke-prod-eus2-001"</span>
+<span class="tok-var">RG</span>=<span class="tok-str">"rg-networking-prod-eus2-001"</span>
+
+<span class="tok-cmt"># GatewaySubnet — exact name required; no NSG; /26 per APAF recommendation</span>
+az network vnet subnet create \
+  <span class="tok-flag">--vnet-name</span>      <span class="tok-str">"$VNET"</span> \
+  <span class="tok-flag">--resource-group</span> <span class="tok-str">"$RG"</span> \
+  <span class="tok-flag">--name</span>           GatewaySubnet \
+  <span class="tok-flag">--address-prefixes</span> 10.10.0.0/26
+
+<span class="tok-cmt"># Application data subnet</span>
+az network vnet subnet create \
+  <span class="tok-flag">--vnet-name</span>      <span class="tok-str">"$VNET"</span> \
+  <span class="tok-flag">--resource-group</span> <span class="tok-str">"$RG"</span> \
+  <span class="tok-flag">--name</span>           snet-data-prod \
+  <span class="tok-flag">--address-prefixes</span> 10.10.2.0/24
+
+<span class="tok-cmt"># Verify: list all subnets with their address ranges</span>
+az network vnet subnet list \
+  <span class="tok-flag">--vnet-name</span>      <span class="tok-str">"$VNET"</span> \
+  <span class="tok-flag">--resource-group</span> <span class="tok-str">"$RG"</span> \
+  <span class="tok-flag">--query</span>          <span class="tok-str">"[].{Name:name, Prefix:addressPrefix, Purpose:serviceEndpoints}"</span> \
+  <span class="tok-flag">--output</span>         table</code></pre>
+  </div>
+
+  <h3 id="s5-2-bicep">Bicep: Production-Ready VNet Declaration</h3>
+  <p>Bicep is the recommended infrastructure-as-code language for all new Azure deployments. The following example declares the same VNet and subnets as the CLI commands above, using the current Bicep API version and APAF structural conventions.</p>
+
+  <div class="code-viewer">
+    <div class="code-viewer__header">
+      <span class="code-viewer__lang">bicep</span>
+      <button class="code-viewer__copy" data-copy-target="code-ce03" aria-label="Copy CE-03 to clipboard">Copy</button>
+    </div>
+    <pre class="code-viewer__pre" id="code-ce03"><code><span class="tok-cmt">// CE-03: Production VNet — Bicep (API version 2025-07-01)</span>
+<span class="tok-kw">@description</span>(<span class="tok-str">'Azure region for deployment'</span>)
+<span class="tok-kw">param</span> location <span class="tok-fn">string</span> = resourceGroup().location
+
+<span class="tok-kw">@description</span>(<span class="tok-str">'Environment tag: prod | staging | dev'</span>)
+<span class="tok-param">@allowed</span>([<span class="tok-str">'prod'</span>, <span class="tok-str">'staging'</span>, <span class="tok-str">'dev'</span>])
+<span class="tok-kw">param</span> environmentName <span class="tok-fn">string</span> = <span class="tok-str">'prod'</span>
+
+<span class="tok-kw">resource</span> <span class="tok-var">virtualNetwork</span> <span class="tok-str">'Microsoft.Network/virtualNetworks@2025-07-01'</span> = {
+  name: <span class="tok-str">'vnet-spoke-${environmentName}-eus2-001'</span>
+  location: location
+  tags: {
+    environment: environmentName
+    managedBy: <span class="tok-str">'platform-networking'</span>
+    chapter: <span class="tok-str">'ch01'</span>
+  }
+  properties: {
+    addressSpace: {
+      addressPrefixes: [<span class="tok-str">'10.10.0.0/22'</span>]
+    }
+    subnets: [
+      {
+        name: <span class="tok-str">'GatewaySubnet'</span>          <span class="tok-cmt">// Exact name required by Azure</span>
+        properties: {
+          addressPrefix: <span class="tok-str">'10.10.0.0/26'</span>
+          <span class="tok-cmt">// Do NOT set networkSecurityGroup here</span>
+          <span class="tok-cmt">// Do NOT set routeTable with 0.0.0.0/0 here</span>
+        }
+      }
+      {
+        name: <span class="tok-str">'snet-app-prod'</span>
+        properties: {
+          addressPrefix: <span class="tok-str">'10.10.1.0/24'</span>
+          privateEndpointNetworkPolicies: <span class="tok-str">'Disabled'</span>  <span class="tok-cmt">// Required for private endpoints</span>
+        }
+      }
+      {
+        name: <span class="tok-str">'snet-data-prod'</span>
+        properties: {
+          addressPrefix: <span class="tok-str">'10.10.2.0/24'</span>
+          privateEndpointNetworkPolicies: <span class="tok-str">'Disabled'</span>
+        }
+      }
+    ]
+  }
+}
+
+<span class="tok-kw">output</span> vnetId <span class="tok-fn">string</span> = virtualNetwork.id
+<span class="tok-kw">output</span> appSubnetId <span class="tok-fn">string</span> = virtualNetwork.properties.subnets[<span class="tok-num">1</span>].id
+<span class="tok-kw">output</span> dataSubnetId <span class="tok-fn">string</span> = virtualNetwork.properties.subnets[<span class="tok-num">2</span>].id</code></pre>
+  </div>
+
+  <p>The <code>Microsoft.Network/virtualNetworks@2025-07-01</code> API version is the current stable release as of the date this chapter was written. Verify the current API version in the <a href="https://learn.microsoft.com/en-us/azure/templates/microsoft.network/virtualnetworks" target="_blank" rel="noopener">Azure resource type reference</a> before deploying to production. The API version affects which properties are available — the <code>privateEndpointNetworkPolicies</code> property shown above requires <code>2021-02-01</code> or later.</p>
+  <p>The <code>privateEndpointNetworkPolicies: 'Disabled'</code> setting is required on any subnet that will host private endpoints. This property is not required on <code>GatewaySubnet</code> or subnets that do not host private endpoints. Set it on application and data subnets as a baseline practice, since adding private endpoints later requires updating this property — a no-downtime change, but one that can be overlooked under time pressure.</p>
+
+  <h3 id="s5-3-routes">Reading Effective Routes on a NIC</h3>
+  <p>After deploying a VNet and attaching a VM, the first verification step is to read the effective routes on the VM's NIC. Effective routes show the actual forwarding decision Azure applies to each packet, merging system routes with any user-defined routes (UDRs) and BGP-learned routes from a gateway. If traffic is taking an unexpected path, the effective routes table is where you confirm or rule out routing as the cause.</p>
+
+  <div class="code-viewer">
+    <div class="code-viewer__header">
+      <span class="code-viewer__lang">bash</span>
+      <button class="code-viewer__copy" data-copy-target="code-ce04" aria-label="Copy CE-04 to clipboard">Copy</button>
+    </div>
+    <pre class="code-viewer__pre" id="code-ce04"><code><span class="tok-cmt"># CE-04: Read effective routes on a NIC — primary diagnostic tool</span>
+az network nic show-effective-route-table \
+  <span class="tok-flag">--resource-group</span> rg-networking-prod-eus2-001 \
+  <span class="tok-flag">--name</span>           nic-vm-app-prod-001 \
+  <span class="tok-flag">--output</span>         table
+
+<span class="tok-cmt"># Expected output for a VNet with no UDRs or gateway:
+# Source    State    Address Prefix    Next Hop Type       Next Hop IP
+# Default   Active   10.10.0.0/22      VnetLocal
+# Default   Active   0.0.0.0/0         Internet
+# Default   Active   100.64.0.0/10     None                — (discard)
+# Default   Active   192.168.0.0/16    None                — (discard)
+# Default   Active   10.0.0.0/8        None                — (discard)
+# Default   Active   172.16.0.0/12     None                — (discard)</span></code></pre>
+  </div>
+
+  <p>The output has four important columns. <strong>Source</strong> identifies whether the route was learned from a system default, a UDR (User), or a BGP advertisement (VirtualNetworkGateway). <strong>State</strong> is either Active or Invalid — Invalid routes are overridden by a more specific prefix and will never be used. <strong>Next Hop Type</strong> identifies the forwarding target: <code>VnetLocal</code> means Azure routes the packet within the VNet fabric; <code>Internet</code> sends the packet to Azure's public internet egress; <code>None</code> discards the packet with no response, which is how Azure prevents traffic from leaking into RFC 1918 ranges that are not part of the VNet.</p>
+  <p>When you add a UDR with a next hop pointing to an NVA or Azure Firewall, the UDR route appears with Source: User and overrides the system route for the same or a less specific prefix. Chapter 2 covers UDR construction and the longest-prefix match algorithm in detail.</p>
+
+  <!-- ════════════════════════════════════════════
+       § 6 — LAB
+  ═════════════════════════════════════════════ -->
+  <h2 id="s6-lab">Hands-On Lab: Build and Verify a Multi-Subnet VNet</h2>
+  <p>This lab deploys a VNet with three subnets, attaches a virtual machine, assigns a static private IP, and verifies the configuration using the CLI commands covered in this chapter. Complete it in a non-production subscription or a dedicated lab resource group.</p>
+
+  <p><strong>Prerequisites:</strong> Azure CLI 2.60 or later; a subscription with Contributor access; resource group <code>rg-lab-ch01</code> already created in <code>eastus2</code>.</p>
+
+  <div class="lab-task">
+    <div class="lab-task__header">
+      <span class="lab-task__badge" aria-hidden="true">1</span>
+      <h3 class="lab-task__title">Create the VNet and platform subnets</h3>
+    </div>
+    <div class="lab-task__body">
+      <p>Create the VNet with a /22 address space, then add <code>GatewaySubnet</code> and <code>snet-data-prod</code> as additional subnets.</p>
+      <div class="code-viewer">
+        <div class="code-viewer__header">
+          <span class="code-viewer__lang">bash</span>
+          <button class="code-viewer__copy" data-copy-target="code-lab1" aria-label="Copy lab task 1 code">Copy</button>
+        </div>
+        <pre class="code-viewer__pre" id="code-lab1"><code><span class="tok-cmt"># Set variables for this lab</span>
+<span class="tok-var">RG</span>=<span class="tok-str">"rg-lab-ch01"</span>
+<span class="tok-var">LOC</span>=<span class="tok-str">"eastus2"</span>
+<span class="tok-var">VNET</span>=<span class="tok-str">"vnet-lab-ch01-001"</span>
+
+<span class="tok-cmt"># Create VNet with app subnet</span>
+az network vnet create \
+  <span class="tok-flag">--name</span>           <span class="tok-str">"$VNET"</span> \
+  <span class="tok-flag">--resource-group</span> <span class="tok-str">"$RG"</span> \
+  <span class="tok-flag">--location</span>       <span class="tok-str">"$LOC"</span> \
+  <span class="tok-flag">--address-prefixes</span> 10.99.0.0/22 \
+  <span class="tok-flag">--subnet-name</span>    snet-app-lab \
+  <span class="tok-flag">--subnet-prefixes</span> 10.99.1.0/24
+
+<span class="tok-cmt"># Add GatewaySubnet</span>
+az network vnet subnet create \
+  <span class="tok-flag">--vnet-name</span>      <span class="tok-str">"$VNET"</span> \
+  <span class="tok-flag">--resource-group</span> <span class="tok-str">"$RG"</span> \
+  <span class="tok-flag">--name</span>           GatewaySubnet \
+  <span class="tok-flag">--address-prefixes</span> 10.99.0.0/26
+
+<span class="tok-cmt"># Add data subnet</span>
+az network vnet subnet create \
+  <span class="tok-flag">--vnet-name</span>      <span class="tok-str">"$VNET"</span> \
+  <span class="tok-flag">--resource-group</span> <span class="tok-str">"$RG"</span> \
+  <span class="tok-flag">--name</span>           snet-data-lab \
+  <span class="tok-flag">--address-prefixes</span> 10.99.2.0/24
+
+<span class="tok-cmt"># Verify all 3 subnets are present</span>
+az network vnet subnet list \
+  <span class="tok-flag">--vnet-name</span> <span class="tok-str">"$VNET"</span> \
+  <span class="tok-flag">--resource-group</span> <span class="tok-str">"$RG"</span> \
+  <span class="tok-flag">--query</span> <span class="tok-str">"[].{Subnet:name, CIDR:addressPrefix}"</span> \
+  <span class="tok-flag">--output</span> table</code></pre>
+      </div>
+      <p>Expected output: three rows — <code>GatewaySubnet/10.99.0.0/26</code>, <code>snet-app-lab/10.99.1.0/24</code>, <code>snet-data-lab/10.99.2.0/24</code>.</p>
+    </div>
+  </div>
+
+  <div class="lab-task">
+    <div class="lab-task__header">
+      <span class="lab-task__badge" aria-hidden="true">2</span>
+      <h3 class="lab-task__title">Deploy a VM with a static private IP</h3>
+    </div>
+    <div class="lab-task__body">
+      <p>Create a NIC with a static private IP assignment, then deploy a VM using that NIC. Using a pre-created NIC gives you explicit control over the IP assignment before the VM is created.</p>
+      <div class="code-viewer">
+        <div class="code-viewer__header">
+          <span class="code-viewer__lang">bash</span>
+          <button class="code-viewer__copy" data-copy-target="code-lab2" aria-label="Copy lab task 2 code">Copy</button>
+        </div>
+        <pre class="code-viewer__pre" id="code-lab2"><code><span class="tok-cmt"># Create NIC with static IP 10.99.1.10</span>
+az network nic create \
+  <span class="tok-flag">--name</span>               nic-vm-lab-001 \
+  <span class="tok-flag">--resource-group</span>     <span class="tok-str">"$RG"</span> \
+  <span class="tok-flag">--location</span>           <span class="tok-str">"$LOC"</span> \
+  <span class="tok-flag">--vnet-name</span>          <span class="tok-str">"$VNET"</span> \
+  <span class="tok-flag">--subnet</span>             snet-app-lab \
+  <span class="tok-flag">--private-ip-address</span> 10.99.1.10 \
+  <span class="tok-flag">--private-ip-address-version</span> IPv4
+
+<span class="tok-cmt"># Deploy Ubuntu VM using the pre-created NIC</span>
+az vm create \
+  <span class="tok-flag">--resource-group</span> <span class="tok-str">"$RG"</span> \
+  <span class="tok-flag">--name</span>           vm-lab-app-001 \
+  <span class="tok-flag">--nics</span>           nic-vm-lab-001 \
+  <span class="tok-flag">--image</span>          Ubuntu2204 \
+  <span class="tok-flag">--size</span>           Standard_B2s \
+  <span class="tok-flag">--generate-ssh-keys \</span>
+  <span class="tok-flag">--no-wait</span></code></pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="lab-task">
+    <div class="lab-task__header">
+      <span class="lab-task__badge" aria-hidden="true">3</span>
+      <h3 class="lab-task__title">Verify the NIC IP configuration</h3>
+    </div>
+    <div class="lab-task__body">
+      <p>Once the VM deployment completes, verify that the NIC shows the static assignment.</p>
+      <div class="code-viewer">
+        <div class="code-viewer__header">
+          <span class="code-viewer__lang">bash</span>
+          <button class="code-viewer__copy" data-copy-target="code-lab3" aria-label="Copy lab task 3 code">Copy</button>
+        </div>
+        <pre class="code-viewer__pre" id="code-lab3"><code>az network nic show \
+  <span class="tok-flag">--resource-group</span> <span class="tok-str">"$RG"</span> \
+  <span class="tok-flag">--name</span>           nic-vm-lab-001 \
+  <span class="tok-flag">--query</span>          <span class="tok-str">"ipConfigurations[0].{IP:privateIPAddress, Method:privateIPAllocationMethod, Subnet:subnet.id}"</span> \
+  <span class="tok-flag">--output</span>         json</code></pre>
+      </div>
+      <p>Confirm <code>privateIPAllocationMethod</code> is <code>Static</code> and <code>privateIPAddress</code> is <code>10.99.1.10</code>.</p>
+    </div>
+  </div>
+
+  <!-- FIG-02 placed before Task 4 as specified in S06 diagram index -->
+  <figure class="apaf-figure" id="fig-1-2">
+    <img
+      src="../diagrams/CH01-FIG-02-ip-address-lifecycle-state.svg"
+      alt="State machine diagram showing private IP lifecycle. Dynamic IPs flow: Unallocated → Allocated (VM started) → Reserved Dynamic (VM deallocated) → back to Allocated (VM restarted) or to NIC Deleted. Static IPs flow directly: Unallocated → Reserved Static → NIC Deleted. Key callout: dynamic IP is NOT released on VM stop/deallocate; only NIC deletion releases it."
+      width="1100"
+      height="560"
+      loading="lazy"
+      decoding="async">
+    <figcaption><strong>Figure 1.2</strong> — Private IP address lifecycle states for dynamic and static NIC IP configurations. Note that VM deallocation does not release a dynamic IP — only NIC deletion returns the address to the subnet pool.</figcaption>
+  </figure>
+
+  <div class="lab-task">
+    <div class="lab-task__header">
+      <span class="lab-task__badge" aria-hidden="true">4</span>
+      <h3 class="lab-task__title">Stop the VM and verify IP retention</h3>
+    </div>
+    <div class="lab-task__body">
+      <p>Deallocate the VM (not just stop — deallocate releases compute resources from the host) and confirm the static IP is still held by the NIC.</p>
+      <div class="code-viewer">
+        <div class="code-viewer__header">
+          <span class="code-viewer__lang">bash</span>
+          <button class="code-viewer__copy" data-copy-target="code-lab4" aria-label="Copy lab task 4 code">Copy</button>
+        </div>
+        <pre class="code-viewer__pre" id="code-lab4"><code><span class="tok-cmt"># Deallocate VM (releases compute host, not network)</span>
+az vm deallocate \
+  <span class="tok-flag">--resource-group</span> <span class="tok-str">"$RG"</span> \
+  <span class="tok-flag">--name</span>           vm-lab-app-001
+
+<span class="tok-cmt"># Query NIC — IP should still be 10.99.1.10 with method Static</span>
+az network nic show \
+  <span class="tok-flag">--resource-group</span> <span class="tok-str">"$RG"</span> \
+  <span class="tok-flag">--name</span>           nic-vm-lab-001 \
+  <span class="tok-flag">--query</span>          <span class="tok-str">"ipConfigurations[0].{IP:privateIPAddress, Method:privateIPAllocationMethod}"</span> \
+  <span class="tok-flag">--output</span>         json</code></pre>
+      </div>
+      <p>For a static assignment, the IP persists across VM lifecycle events. Had you created the NIC with <code>--private-ip-address-version IPv4</code> and no explicit <code>--private-ip-address</code>, the method would be Dynamic — and the IP would still persist on deallocation. As Figure 1.2 shows, dynamic IP release requires NIC deletion, not just VM deallocation.</p>
+    </div>
+  </div>
+
+  <div class="lab-task">
+    <div class="lab-task__header">
+      <span class="lab-task__badge" aria-hidden="true">5</span>
+      <h3 class="lab-task__title">Read effective routes</h3>
+    </div>
+    <div class="lab-task__body">
+      <p>Start the VM and then read its effective routes to see the default system routes Azure installs for the VNet.</p>
+      <div class="code-viewer">
+        <div class="code-viewer__header">
+          <span class="code-viewer__lang">bash</span>
+          <button class="code-viewer__copy" data-copy-target="code-lab5" aria-label="Copy lab task 5 code">Copy</button>
+        </div>
+        <pre class="code-viewer__pre" id="code-lab5"><code><span class="tok-cmt"># Start the VM before reading routes</span>
+az vm start \
+  <span class="tok-flag">--resource-group</span> <span class="tok-str">"$RG"</span> \
+  <span class="tok-flag">--name</span>           vm-lab-app-001
+
+<span class="tok-cmt"># Read effective routes from the NIC</span>
+az network nic show-effective-route-table \
+  <span class="tok-flag">--resource-group</span> <span class="tok-str">"$RG"</span> \
+  <span class="tok-flag">--name</span>           nic-vm-lab-001 \
+  <span class="tok-flag">--output</span>         table
+
+<span class="tok-cmt"># Clean up when done</span>
+az group delete <span class="tok-flag">--name</span> <span class="tok-str">"$RG"</span> <span class="tok-flag">--yes</span> <span class="tok-flag">--no-wait</span></code></pre>
+      </div>
+      <p>Verify you see a <code>VnetLocal</code> route for <code>10.99.0.0/22</code> and an <code>Internet</code> route for <code>0.0.0.0/0</code>. The four RFC 1918 discard routes (<code>None</code> next hop) confirm Azure's default isolation of private address space. Chapter 2 shows how to override the <code>0.0.0.0/0</code> Internet route with a UDR that forces all egress traffic through Azure Firewall.</p>
+    </div>
+  </div>
+
+  <div class="callout callout--note" role="note" aria-label="Note">
+    <span class="callout__icon" aria-hidden="true">&#8505;&#65039;</span>
+    <div class="callout__body">
+      <p class="callout__label">Note</p>
+      <p class="callout__text"><code>az network nic show-effective-route-table</code> requires the VM to be in a running state. If the VM is deallocated, the command returns an error. Start the VM or use <code>az vm show</code> to confirm the VM state before running route diagnostics.</p>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════
+       § 7 — SUMMARY
+  ═════════════════════════════════════════════ -->
+  <h2 id="s7-summary">Summary</h2>
+  <p>This chapter established the foundational Azure networking model that every subsequent chapter builds on. The core concepts form a hierarchy: the SDN layer enforces VNet isolation independent of IP addressing; subnets segment the VNet address space with five reserved addresses each; and the NIC is the attachment point between compute and network, carrying IP configurations, NSG associations, and routing state.</p>
+
+  <div class="table-wrap">
+    <table class="apaf-table">
+      <thead>
+        <tr><th>Concept</th><th>Key Rule</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>VNet isolation</td><td>Enforced at the host SDN layer; independent of IP addressing</td></tr>
+        <tr><td>VNet scope</td><td>Single region, single subscription; subnets span all AZs automatically</td></tr>
+        <tr><td>Reserved addresses</td><td>5 per subnet (&#46;0, &#46;1, &#46;2, &#46;3, &#46;255); usable = 2<sup>n</sup> &minus; 5</td></tr>
+        <tr><td>GatewaySubnet</td><td>Exact name; /26 recommended; no NSGs, no 0.0.0.0/0 UDRs, no VMs</td></tr>
+        <tr><td>Dynamic IP retention</td><td>Held across VM stop/deallocate; released only on NIC deletion</td></tr>
+        <tr><td>Public IP SKU</td><td>Standard only; Basic retired September 30, 2025</td></tr>
+        <tr><td>IPv6 subnet size</td><td>Must be exactly /64; Azure Firewall and VPN Gateway do not support IPv6</td></tr>
+        <tr><td>CLI parameters</td><td><code>--address-prefixes</code> and <code>--subnet-prefixes</code> (plural forms)</td></tr>
+        <tr><td>Bicep API version</td><td><code>Microsoft.Network/virtualNetworks@2025-07-01</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Chapter 2 extends the routing model introduced here. You will build user-defined routes to override system routes, configure next-hop targets for NVAs and Azure Firewall, and understand how Azure evaluates multiple routes for the same destination using longest-prefix matching. The effective routes diagnostic command you used in Task 5 of this lab becomes your primary tool throughout that chapter.</p>
+
+  <hr>
+
+  <p style="font-size:.8125rem; color:var(--c-text2)">
+    <strong>Chapter:</strong> 1 of 12 &nbsp;|&nbsp;
+    <strong>Status:</strong> v0.1 Draft — pending S08 review &nbsp;|&nbsp;
+    <strong>Last updated:</strong> <time datetime="2026-07-07">2026-07-07</time>
+  </p>
+
+</article>
+</main>
+
+<!-- ── TOC sidebar ───────────────────────────────────────── -->
+<aside class="toc-sidebar" aria-label="Table of contents">
+  <nav aria-label="On this page">
+    <h2 class="toc-sidebar__heading">On this page</h2>
+    <ol class="toc-sidebar__list" id="toc-list">
+      <li><a href="#s1-vnet-model">1. The VNet Model</a>
+        <ol class="toc-sidebar__list">
+          <li class="toc-h4"><a href="#s1-1-sdn">SDN Isolation</a></li>
+          <li class="toc-h4"><a href="#s1-2-scope">Regional Scope</a></li>
+          <li class="toc-h4"><a href="#s1-3-limits">VNet Limits</a></li>
+        </ol>
+      </li>
+      <li><a href="#s2-address-subnets">2. Address Spaces &amp; Subnets</a>
+        <ol class="toc-sidebar__list">
+          <li class="toc-h4"><a href="#s2-1-rfc1918">RFC 1918 Ranges</a></li>
+          <li class="toc-h4"><a href="#s2-2-subnets">Subnet Fundamentals</a></li>
+          <li class="toc-h4"><a href="#s2-3-special">Special-Purpose Subnets</a></li>
+          <li class="toc-h4"><a href="#s2-4-delegation">Subnet Delegation</a></li>
+        </ol>
+      </li>
+      <li><a href="#s3-nics-ip">3. NICs &amp; IP Addressing</a>
+        <ol class="toc-sidebar__list">
+          <li class="toc-h4"><a href="#s3-1-attachment">NIC Attachment Point</a></li>
+          <li class="toc-h4"><a href="#s3-2-static-dynamic">Static vs Dynamic</a></li>
+          <li class="toc-h4"><a href="#s3-3-public-ip">Public IP Addresses</a></li>
+          <li class="toc-h4"><a href="#s3-4-ipv6">IPv6</a></li>
+        </ol>
+      </li>
+      <li><a href="#s4-cidr">4. CIDR Planning</a>
+        <ol class="toc-sidebar__list">
+          <li class="toc-h4"><a href="#s4-1-mistakes">Sizing Mistakes</a></li>
+          <li class="toc-h4"><a href="#s4-2-method">Sizing Method</a></li>
+          <li class="toc-h4"><a href="#s4-3-overlap">Overlapping Space</a></li>
+        </ol>
+      </li>
+      <li><a href="#s5-deploy">5. Deploying VNets</a>
+        <ol class="toc-sidebar__list">
+          <li class="toc-h4"><a href="#s5-1-cli">Azure CLI</a></li>
+          <li class="toc-h4"><a href="#s5-2-bicep">Bicep</a></li>
+          <li class="toc-h4"><a href="#s5-3-routes">Effective Routes</a></li>
+        </ol>
+      </li>
+      <li><a href="#s6-lab">6. Lab</a></li>
+      <li><a href="#s7-summary">7. Summary</a></li>
+    </ol>
+  </nav>
+</aside>
+
+</div><!-- /.layout -->
+
+<!-- ═══ SITE FOOTER ════════════════════════════════════════ -->
+<footer class="site-footer" role="contentinfo">
+  <nav class="chapter-nav" aria-label="Chapter navigation">
+    <span class="chapter-nav__spacer"></span>
+    <a class="chapter-nav__link" href="ch02-routing-traffic-control.html">
+      <span class="chapter-nav__dir">Next chapter &rarr;</span>
+      <span class="chapter-nav__title">2. Routing and Traffic Control</span>
+    </a>
+  </nav>
+  <p class="apaf-footer-copy">Azure Networking Deep Dive &mdash; APAF v1.0 &mdash; &copy; 2026</p>
+</footer>
+
+<!-- ═══ JAVASCRIPT ══════════════════════════════════════════ -->
+<script defer>
+(function(){
+  'use strict';
+
+  /* ── Theme toggle ──────────────────────────────────── */
+  var btn = document.getElementById('theme-toggle');
+  if(btn){
+    btn.addEventListener('click', function(){
+      var current = document.documentElement.getAttribute('data-theme');
+      var next = current === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('apaf-theme', next);
+    });
+  }
+
+  /* ── Copy buttons ──────────────────────────────────── */
+  document.querySelectorAll('.code-viewer__copy').forEach(function(button){
+    button.addEventListener('click', function(){
+      var targetId = button.getAttribute('data-copy-target');
+      var preEl = document.getElementById(targetId);
+      if(!preEl) return;
+      var text = preEl.innerText || preEl.textContent || '';
+      navigator.clipboard.writeText(text).then(function(){
+        button.textContent = 'Copied!';
+        setTimeout(function(){ button.textContent = 'Copy'; }, 2000);
+      }).catch(function(){
+        /* Fallback: select text */
+        var range = document.createRange();
+        range.selectNodeContents(preEl);
+        var sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+        button.textContent = 'Selected';
+        setTimeout(function(){ button.textContent = 'Copy'; }, 2000);
+      });
+    });
+  });
+
+  /* ── Active TOC on scroll ──────────────────────────── */
+  var headings = Array.from(document.querySelectorAll('.doc-article h2, .doc-article h3'));
+  var tocLinks = document.querySelectorAll('.toc-sidebar__list a');
+
+  if(headings.length && tocLinks.length && 'IntersectionObserver' in window){
+    var visibleSet = new Set();
+    var obs = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        if(e.isIntersecting) visibleSet.add(e.target.id);
+        else visibleSet.delete(e.target.id);
+      });
+      /* Activate link for topmost visible heading */
+      var topId = null;
+      headings.forEach(function(h){
+        if(!topId && visibleSet.has(h.id)) topId = h.id;
+      });
+      tocLinks.forEach(function(a){
+        a.classList.toggle('is-active',
+          topId && a.getAttribute('href') === '#' + topId);
+      });
+    }, {rootMargin: '-64px 0px -70% 0px'});
+
+    headings.forEach(function(h){
+      if(h.id) obs.observe(h);
+    });
+  }
+
+})();
+</script>
+</body>
+</html>

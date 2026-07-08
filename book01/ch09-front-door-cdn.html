@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Azure Front Door and CDN | Azure Networking Deep Dive | APAF</title>
+<script>(function(){var s=localStorage.getItem('apaf-theme');if(s)document.documentElement.setAttribute('data-theme',s);else if(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)document.documentElement.setAttribute('data-theme','dark');})()</script>
+<style>
+*,*::before,*::after{box-sizing:border-box}html{font-size:100%;scroll-behavior:smooth}body{margin:0;padding:0}h1,h2,h3,h4,p,figure,figcaption,ul,ol,li,table,th,td,pre,code{margin:0;padding:0}img{display:block;max-width:100%}button{font:inherit}
+:root{--c-primary:#0F2D5E;--c-accent:#0078D4;--c-success:#107C10;--c-warning:#FFB900;--c-error:#D13438;--c-bg:#FAF9F8;--c-surface:#F3F2F1;--c-border:#EDEBE9;--c-text:#1B1A19;--c-text2:#605E5C;--c-link:#0078D4;--callout-note-bg:#EFF6FC;--callout-note-bd:#0078D4;--callout-warn-bg:#FFF4CE;--callout-warn-bd:#FFB900;--callout-imp-bg:#FDE7E9;--callout-imp-bd:#D13438;--callout-tip-bg:#DFF6DD;--callout-tip-bd:#107C10;--shadow-sm:0 1px 3px rgba(0,0,0,.12);--radius:6px;--font-mono:'Cascadia Code',Consolas,'Courier New',monospace}
+[data-theme="dark"]{--c-bg:#1E1E2E;--c-surface:#252535;--c-border:#3A3A5C;--c-text:#E2E2F0;--c-text2:#9090B8;--c-link:#4DAEF0;--callout-note-bg:#0D2D42;--callout-note-bd:#4DAEF0;--callout-warn-bg:#2D2200;--callout-warn-bd:#FFD740;--callout-imp-bg:#2D0D0F;--callout-imp-bd:#FF5252;--callout-tip-bg:#0D2B0D;--callout-tip-bd:#4CAF50}
+.skip-link{position:absolute;top:-3rem;left:1rem;padding:.5rem 1rem;background:var(--c-accent);color:#fff;border-radius:var(--radius);font-size:.875rem;z-index:9999;transition:top .15s;text-decoration:none}.skip-link:focus{top:.5rem}
+.site-header{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:.625rem 1.5rem;background:var(--c-primary);color:#fff;box-shadow:var(--shadow-sm)}.site-header__brand{display:flex;align-items:center;gap:.75rem;text-decoration:none;color:#fff}.site-header__wordmark{font-size:1rem;font-weight:700}.site-header__subtitle{font-size:.75rem;opacity:.75}.btn-icon{background:transparent;border:1px solid rgba(255,255,255,.3);border-radius:var(--radius);color:#fff;cursor:pointer;width:2rem;height:2rem;display:flex;align-items:center;justify-content:center}
+.layout{display:grid;grid-template-columns:240px 1fr 220px;min-height:calc(100vh - 3rem);background:var(--c-bg)}
+@media(max-width:1200px){.layout{grid-template-columns:240px 1fr}.toc-sidebar{display:none}}@media(max-width:768px){.layout{grid-template-columns:1fr}.nav-sidebar{display:none}}
+.nav-sidebar{border-right:1px solid var(--c-border);background:var(--c-surface);padding:1.5rem 0;overflow-y:auto;position:sticky;top:3rem;height:calc(100vh - 3rem)}.nav-sidebar__section{padding:.25rem 1rem .5rem;font-size:.6875rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--c-text2)}.nav-sidebar__list{list-style:none;padding:0;margin:0 0 1.5rem}.nav-sidebar__item a{display:block;padding:.4rem 1.25rem;font-size:.8125rem;color:var(--c-text2);text-decoration:none;border-left:2px solid transparent;transition:all .15s}.nav-sidebar__item a:hover{color:var(--c-text)}.nav-sidebar__item--active a{color:var(--c-accent);border-left-color:var(--c-accent);background:rgba(0,120,212,.06);font-weight:600}
+.progress-bar-wrap{display:flex;align-items:center;gap:.75rem;padding:.75rem 0 0;margin-bottom:1.5rem}.progress-bar-track{flex:1;height:4px;border-radius:2px;background:var(--c-border);overflow:hidden}.progress-bar-fill{height:100%;border-radius:2px;background:var(--c-accent)}.progress-bar-label{font-size:.75rem;color:var(--c-text2);white-space:nowrap}
+.main-content{padding:2rem 2.5rem 4rem;min-width:0;max-width:860px}.doc-article__eyebrow{font-size:.75rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--c-accent);margin-bottom:.5rem}.doc-article__title{font-size:2rem;font-weight:700;color:var(--c-text);line-height:1.2;margin-bottom:.75rem}.doc-article__meta{font-size:.8125rem;color:var(--c-text2);margin-bottom:1.5rem;display:flex;flex-wrap:wrap;gap:1rem}
+.learning-objectives{background:var(--c-surface);border:1px solid var(--c-border);border-left:3px solid var(--c-accent);border-radius:var(--radius);padding:1rem 1.25rem;margin-bottom:2rem}.learning-objectives__title{font-size:.8125rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--c-accent);margin-bottom:.6rem}.learning-objectives ol{padding-left:1.25rem;margin:0}.learning-objectives li{font-size:.9rem;color:var(--c-text);line-height:1.55;margin-bottom:.35rem}
+.doc-article h2{font-size:1.5rem;font-weight:700;color:var(--c-text);padding-top:2rem;margin-bottom:.75rem;border-bottom:1px solid var(--c-border);padding-bottom:.5rem}.doc-article h3{font-size:1.2rem;font-weight:700;color:var(--c-text);padding-top:1.5rem;margin-bottom:.6rem}.doc-article p{font-size:.9375rem;line-height:1.7;color:var(--c-text);margin-bottom:1rem}.doc-article code{font-family:var(--font-mono);font-size:.8125rem;background:var(--c-surface);border:1px solid var(--c-border);border-radius:3px;padding:.1em .35em}[data-theme="dark"] .doc-article code{background:#2A2A3E;border-color:#3A3A5C}.doc-article ul,.doc-article ol{padding-left:1.5rem;margin-bottom:1rem}.doc-article li{font-size:.9375rem;line-height:1.7;color:var(--c-text);margin-bottom:.35rem}.doc-article hr{border:none;border-top:1px solid var(--c-border);margin:2rem 0}
+.table-wrap{overflow-x:auto;margin-bottom:1.5rem;border-radius:var(--radius);border:1px solid var(--c-border)}.apaf-table{width:100%;border-collapse:collapse;font-size:.875rem}.apaf-table th{background:var(--c-surface);font-weight:700;font-size:.8125rem;text-align:left;padding:.6rem .875rem;border-bottom:2px solid var(--c-border)}.apaf-table td{padding:.55rem .875rem;color:var(--c-text);border-bottom:1px solid var(--c-border);vertical-align:top}.apaf-table tr:last-child td{border-bottom:none}.apaf-table tr:nth-child(even) td{background:var(--c-surface)}
+.callout{display:flex;gap:.75rem;padding:.875rem 1rem;border-radius:var(--radius);margin:1rem 0 1.25rem;border-left:3px solid}.callout__icon{font-size:1rem;flex-shrink:0}.callout__body{flex:1}.callout__label{font-size:.75rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;margin-bottom:.3rem}.callout__text{font-size:.875rem;line-height:1.6;color:var(--c-text)}.callout--note{background:var(--callout-note-bg);border-color:var(--callout-note-bd)}.callout--note .callout__label{color:var(--callout-note-bd)}.callout--tip{background:var(--callout-tip-bg);border-color:var(--callout-tip-bd)}.callout--tip .callout__label{color:var(--callout-tip-bd)}.callout--warning{background:var(--callout-warn-bg);border-color:var(--callout-warn-bd)}.callout--warning .callout__label{color:#7A5C00}[data-theme="dark"] .callout--warning .callout__label{color:var(--callout-warn-bd)}
+.code-viewer{margin:1rem 0 1.5rem;border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow-sm)}.code-viewer__header{display:flex;align-items:center;justify-content:space-between;padding:.4rem .875rem;background:#21252B;border-bottom:1px solid #181A1F}.code-viewer__lang{font-family:var(--font-mono);font-size:.7rem;color:#8B9099;letter-spacing:.06em;text-transform:uppercase}.code-viewer__copy{background:transparent;border:1px solid #3A4048;color:#8B9099;border-radius:3px;padding:.2rem .6rem;font-size:.7rem;cursor:pointer}.code-viewer__pre{margin:0;padding:1rem;overflow-x:auto;background:#282C34;font-family:var(--font-mono);font-size:.8125rem;line-height:1.65;color:#ABB2BF}
+.tok-cmt{color:#5C6370;font-style:italic}.tok-kw{color:#C678DD}.tok-str{color:#98C379}.tok-fn{color:#61AFEF}.tok-flag{color:#56B6C2}.tok-var{color:#E06C75}
+.apaf-figure{margin:1.5rem 0 2rem;text-align:center}.apaf-figure img{max-width:100%;height:auto;border-radius:var(--radius);border:1px solid var(--c-border)}.apaf-figure figcaption{font-size:.8125rem;font-style:italic;color:var(--c-text2);margin-top:.6rem}
+.lab-task{border:1px solid var(--c-border);border-radius:var(--radius);margin-bottom:1.5rem;overflow:hidden}.lab-task__header{display:flex;align-items:center;gap:.75rem;padding:.6rem 1rem;background:var(--c-surface);border-bottom:1px solid var(--c-border)}.lab-task__badge{display:inline-flex;align-items:center;justify-content:center;width:1.5rem;height:1.5rem;border-radius:50%;background:var(--c-accent);color:#fff;font-size:.75rem;font-weight:700;flex-shrink:0}.lab-task__title{font-size:.9rem;font-weight:700;color:var(--c-text)}.lab-task__body{padding:.875rem 1rem}
+.toc-sidebar{padding:1.5rem 1rem;border-left:1px solid var(--c-border);position:sticky;top:3rem;height:calc(100vh - 3rem);overflow-y:auto}.toc-sidebar__heading{font-size:.6875rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--c-text2);margin-bottom:.75rem}.toc-sidebar__list{list-style:none;padding:0;margin:0}.toc-sidebar__list li{margin-bottom:.2rem}.toc-sidebar__list a{font-size:.8rem;color:var(--c-text2);text-decoration:none;display:block;padding:.2rem .5rem;border-radius:3px;border-left:2px solid transparent;transition:all .15s}.toc-sidebar__list a.is-active{color:var(--c-accent);border-left-color:var(--c-accent);background:rgba(0,120,212,.06)}
+.site-footer{background:var(--c-surface);border-top:1px solid var(--c-border);padding:1.5rem 2rem}.chapter-nav{display:flex;justify-content:space-between;align-items:center;max-width:860px}.chapter-nav__link{display:flex;flex-direction:column;gap:.2rem;text-decoration:none;padding:.75rem 1rem;border:1px solid var(--c-border);border-radius:var(--radius);background:var(--c-bg);transition:border-color .15s;max-width:260px}.chapter-nav__link:hover{border-color:var(--c-accent)}.chapter-nav__dir{font-size:.7rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--c-text2)}.chapter-nav__title{font-size:.875rem;font-weight:600;color:var(--c-accent)}.apaf-footer-copy{text-align:center;margin-top:1.25rem;font-size:.75rem;color:var(--c-text2)}
+</style>
+</head>
+<body>
+<a class="skip-link" href="#main-content">Skip to main content</a>
+<header class="site-header" role="banner">
+  <a class="site-header__brand" href="../index.html"><span class="site-header__wordmark">APAF</span><span class="site-header__subtitle">Azure Networking Deep Dive</span></a>
+  <button class="btn-icon" id="theme-toggle" aria-label="Toggle dark mode"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6zm0 13a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 13zm8-5a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2a.5.5 0 0 1 .5.5zM3 8a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2A.5.5 0 0 1 3 8z"/></svg></button>
+</header>
+<div class="layout">
+<nav class="nav-sidebar" aria-label="Book chapters">
+  <p class="nav-sidebar__section">Azure Networking Deep Dive</p>
+  <ul class="nav-sidebar__list">
+    <li class="nav-sidebar__item"><a href="ch01-azure-network-foundations.html">1. Azure Network Foundations</a></li>
+    <li class="nav-sidebar__item"><a href="ch02-routing-traffic-control.html">2. Routing and Traffic Control</a></li>
+    <li class="nav-sidebar__item"><a href="ch03-hub-spoke-topology.html">3. Hub-and-Spoke Topology</a></li>
+    <li class="nav-sidebar__item"><a href="ch04-azure-virtual-wan.html">4. Azure Virtual WAN</a></li>
+    <li class="nav-sidebar__item"><a href="ch05-vpn-gateway.html">5. Hybrid: VPN Gateway</a></li>
+    <li class="nav-sidebar__item"><a href="ch06-expressroute.html">6. Hybrid: ExpressRoute</a></li>
+    <li class="nav-sidebar__item"><a href="ch07-private-link.html">7. Private Link and Endpoints</a></li>
+    <li class="nav-sidebar__item"><a href="ch08-load-balancer-appgw.html">8. Load Balancer and App Gateway</a></li>
+    <li class="nav-sidebar__item nav-sidebar__item--active"><a href="ch09-front-door-cdn.html" aria-current="page">9. Azure Front Door and CDN</a></li>
+    <li class="nav-sidebar__item"><a href="ch10-network-security.html">10. Network Security</a></li>
+    <li class="nav-sidebar__item"><a href="ch11-dns-architecture.html">11. DNS Architecture</a></li>
+    <li class="nav-sidebar__item"><a href="ch12-monitoring-troubleshooting.html">12. Monitoring and Troubleshooting</a></li>
+  </ul>
+</nav>
+<main class="main-content" id="main-content">
+<article class="doc-article">
+  <header>
+    <div class="progress-bar-wrap" role="progressbar" aria-valuenow="9" aria-valuemin="1" aria-valuemax="12" aria-label="Chapter 9 of 12">
+      <div class="progress-bar-track"><div class="progress-bar-fill" style="width:75%"></div></div>
+      <span class="progress-bar-label">Chapter 9 of 12</span>
+    </div>
+    <p class="doc-article__eyebrow">Book 01 — Azure Networking Deep Dive</p>
+    <h1 class="doc-article__title">Azure Front Door and CDN</h1>
+    <div class="doc-article__meta"><span>&#128197; <time datetime="2026-07-08">July 8, 2026</time></span><span>&#128337; 35 min read</span><span>&#9881;&#65039; Lab included</span></div>
+  </header>
+  <aside class="learning-objectives" aria-label="Learning objectives">
+    <p class="learning-objectives__title">Learning Objectives</p>
+    <ol>
+      <li>Explain how anycast routing delivers client traffic to the nearest Front Door PoP.</li>
+      <li>Select Standard vs Premium SKU based on Private Link and WAF requirements.</li>
+      <li>Configure a Front Door profile with an origin group, health probes, and a route.</li>
+      <li>Enable Private Link on a Premium origin to eliminate public endpoint exposure.</li>
+      <li>Configure WAF policy with Microsoft Default Rule Set in Prevention mode.</li>
+      <li>Use routing methods (Latency, Priority, Weighted) for global traffic management.</li>
+    </ol>
+  </aside>
+  <p>Azure Front Door is Microsoft's global anycast HTTP(S) load balancer and CDN that operates from 200+ PoPs on the Microsoft global network. It provides TLS termination at the edge, sub-second origin failover, WAF inspection, and — at the Premium SKU — Private Link origins that keep backend services off the public internet.</p>
+
+  <h2 id="s1-overview">Front Door Overview</h2>
+  <h3 id="s1-1-sku">SKU Comparison</h3>
+  <div class="table-wrap">
+    <table class="apaf-table">
+      <thead><tr><th>Capability</th><th>Standard</th><th>Premium</th></tr></thead>
+      <tbody>
+        <tr><td>Global anycast routing</td><td>Yes</td><td>Yes</td></tr>
+        <tr><td>CDN caching</td><td>Yes</td><td>Yes</td></tr>
+        <tr><td>WAF</td><td>Basic (custom rules)</td><td>Managed (DRS 2.1 + Bot Protection)</td></tr>
+        <tr><td>Private Link origin</td><td>No</td><td>Yes</td></tr>
+        <tr><td>Security analytics</td><td>No</td><td>Yes</td></tr>
+        <tr><td>Pricing basis</td><td>Per GB + requests</td><td>Per GB + requests (higher)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout callout--tip" role="note">
+    <span class="callout__icon" aria-hidden="true">&#128161;</span>
+    <div class="callout__body"><p class="callout__label">Tip</p>
+    <p class="callout__text">Use <strong>Standard</strong> for global CDN and routing. Use <strong>Premium</strong> when origins must remain private (no public endpoint), or when bot protection and security analytics are required for compliance.</p></div>
+  </div>
+
+  <h2 id="s2-anycast">Anycast and Global Routing</h2>
+  <p>Front Door uses anycast: all Front Door IP addresses are simultaneously advertised from every PoP. When a client resolves the Front Door FQDN, BGP routes the DNS response to the geographically nearest PoP. The client's TLS handshake completes at that PoP — minimising RTT — and traffic travels over the Microsoft backbone to the origin.</p>
+
+  <figure class="apaf-figure" id="fig-9-1">
+    <img src="../diagrams/CH09-FIG-01-front-door-anycast.svg" alt="Front Door anycast architecture. EU client connects to Amsterdam PoP. NA client connects to Virginia PoP. APAC client connects to Singapore PoP. All PoPs share the same anycast IP and route traffic over the Microsoft backbone to the shared origin." width="1100" height="560" loading="eager" decoding="async">
+    <figcaption><strong>Figure 9.1</strong> — Front Door anycast: each region's client connects to the nearest PoP; Microsoft backbone carries traffic to origin</figcaption>
+  </figure>
+
+  <h3 id="s2-2-routing">Routing Methods</h3>
+  <div class="table-wrap">
+    <table class="apaf-table">
+      <thead><tr><th>Method</th><th>Behaviour</th><th>Use Case</th></tr></thead>
+      <tbody>
+        <tr><td>Latency</td><td>Sends to lowest-latency origin (measured by health probe)</td><td>Default; best for active-active multi-region</td></tr>
+        <tr><td>Priority</td><td>Primary origin handles all traffic; secondary if primary fails</td><td>Active-passive DR</td></tr>
+        <tr><td>Weighted</td><td>Splits traffic by weight (e.g. 90/10 blue-green)</td><td>Canary releases, gradual migration</td></tr>
+        <tr><td>Session Affinity</td><td>Routes repeat clients to same origin</td><td>Stateful applications (shopping carts)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2 id="s3-config">Configuration: Endpoint, Origins, Route</h2>
+  <div class="code-viewer">
+    <div class="code-viewer__header"><span class="code-viewer__lang">bash</span><button class="code-viewer__copy" data-copy-target="ce-afd">Copy</button></div>
+    <pre class="code-viewer__pre" id="ce-afd"><code><span class="tok-cmt"># Create Front Door Premium profile</span>
+az afd profile create \
+  <span class="tok-flag">--profile-name</span> afd-web <span class="tok-flag">--resource-group</span> rg-app \
+  <span class="tok-flag">--sku</span> Premium_AzureFrontDoor
+
+az afd endpoint create \
+  <span class="tok-flag">--endpoint-name</span> ep-web \
+  <span class="tok-flag">--profile-name</span> afd-web <span class="tok-flag">--resource-group</span> rg-app
+
+az afd origin-group create \
+  <span class="tok-flag">--origin-group-name</span> og-web \
+  <span class="tok-flag">--profile-name</span> afd-web <span class="tok-flag">--resource-group</span> rg-app \
+  <span class="tok-flag">--probe-request-type</span> HEAD \
+  <span class="tok-flag">--probe-protocol</span> Https <span class="tok-flag">--probe-path</span> /health \
+  <span class="tok-flag">--probe-interval-in-seconds</span> 30 \
+  <span class="tok-flag">--sample-size</span> 4 <span class="tok-flag">--successful-samples-required</span> 3
+
+az afd origin create \
+  <span class="tok-flag">--origin-name</span> origin-appservice \
+  <span class="tok-flag">--profile-name</span> afd-web <span class="tok-flag">--resource-group</span> rg-app \
+  <span class="tok-flag">--origin-group-name</span> og-web \
+  <span class="tok-flag">--host-name</span> myapp.azurewebsites.net \
+  <span class="tok-flag">--origin-host-header</span> myapp.azurewebsites.net \
+  <span class="tok-flag">--priority</span> 1 <span class="tok-flag">--weight</span> 1000 <span class="tok-flag">--https-port</span> 443
+
+az afd route create \
+  <span class="tok-flag">--route-name</span> route-web \
+  <span class="tok-flag">--endpoint-name</span> ep-web \
+  <span class="tok-flag">--profile-name</span> afd-web <span class="tok-flag">--resource-group</span> rg-app \
+  <span class="tok-flag">--origin-group</span> og-web \
+  <span class="tok-flag">--https-redirect</span> Enabled \
+  <span class="tok-flag">--supported-protocols</span> Http Https \
+  <span class="tok-flag">--patterns-to-match</span> <span class="tok-str">"/*"</span></code></pre>
+  </div>
+
+  <h2 id="s4-private-link">Private Link Origins (Premium)</h2>
+  <p>With Premium SKU, Front Door connects to origins via Private Link — the origin's public endpoint can be disabled entirely. Traffic from the PoP travels the Microsoft backbone and arrives via a Private Endpoint NIC in the origin VNet. The origin resource (App Service, Internal LB, AKS Ingress) must approve the connection.</p>
+
+  <figure class="apaf-figure" id="fig-9-2">
+    <img src="../diagrams/CH09-FIG-02-front-door-private-link-origin.svg" alt="Front Door Premium Private Link origin. Internet traffic arrives at PoP, WAF inspects, traffic travels Microsoft backbone to Private Endpoint in origin VNet. Origin has no public endpoint. Contrasted with Standard SKU which requires public endpoint." width="1100" height="500" loading="lazy" decoding="async">
+    <figcaption><strong>Figure 9.2</strong> — Premium: Private Link origin eliminates public exposure; origin approves the connection</figcaption>
+  </figure>
+
+  <div class="code-viewer">
+    <div class="code-viewer__header"><span class="code-viewer__lang">bash</span><button class="code-viewer__copy" data-copy-target="ce-pl">Copy</button></div>
+    <pre class="code-viewer__pre" id="ce-pl"><code><span class="tok-cmt"># Origin with Private Link (Premium only)</span>
+az afd origin create \
+  <span class="tok-flag">--origin-name</span> origin-private \
+  <span class="tok-flag">--profile-name</span> afd-web <span class="tok-flag">--resource-group</span> rg-app \
+  <span class="tok-flag">--origin-group-name</span> og-web \
+  <span class="tok-flag">--host-name</span> myapp.azurewebsites.net \
+  <span class="tok-flag">--origin-host-header</span> myapp.azurewebsites.net \
+  <span class="tok-flag">--enable-private-link</span> true \
+  <span class="tok-flag">--private-link-resource</span> <span class="tok-str">"/subscriptions/&lt;sub&gt;/.../sites/myapp"</span> \
+  <span class="tok-flag">--private-link-sub-resource-type</span> sites \
+  <span class="tok-flag">--private-link-request-message</span> <span class="tok-str">"Front Door origin"</span></code></pre>
+  </div>
+
+  <div class="callout callout--note" role="note">
+    <span class="callout__icon" aria-hidden="true">&#8505;&#65039;</span>
+    <div class="callout__body"><p class="callout__label">Note</p>
+    <p class="callout__text">After creating the origin, navigate to the origin resource's <strong>Private endpoint connections</strong> blade and approve the connection. Front Door health probes will remain unhealthy until the Private Endpoint is approved.</p></div>
+  </div>
+
+  <h2 id="s5-waf">WAF at the Edge</h2>
+  <div class="code-viewer">
+    <div class="code-viewer__header"><span class="code-viewer__lang">bash</span><button class="code-viewer__copy" data-copy-target="ce-waf">Copy</button></div>
+    <pre class="code-viewer__pre" id="ce-waf"><code><span class="tok-cmt"># WAF Policy with Microsoft Default Rule Set</span>
+az network front-door waf-policy create \
+  <span class="tok-flag">--name</span> wafpol-fd <span class="tok-flag">--resource-group</span> rg-app \
+  <span class="tok-flag">--sku</span> Premium_AzureFrontDoor <span class="tok-flag">--mode</span> Prevention
+
+az network front-door waf-policy managed-rules add \
+  <span class="tok-flag">--policy-name</span> wafpol-fd <span class="tok-flag">--resource-group</span> rg-app \
+  <span class="tok-flag">--type</span> Microsoft_DefaultRuleSet <span class="tok-flag">--version</span> 2.1
+
+az afd security-policy create \
+  <span class="tok-flag">--security-policy-name</span> sec-pol-web \
+  <span class="tok-flag">--profile-name</span> afd-web <span class="tok-flag">--resource-group</span> rg-app \
+  <span class="tok-flag">--waf-policy</span> <span class="tok-str">".../wafpol-fd"</span> \
+  <span class="tok-flag">--domains</span> ep-web.z01.azurefd.net</code></pre>
+  </div>
+
+  <h2 id="s6-caching">Caching and CDN</h2>
+  <p>Front Door caches at edge PoPs based on <code>Cache-Control</code> headers from the origin. Static assets (JS, CSS, images) should return <code>Cache-Control: max-age=86400</code>. Dynamic API routes should use a separate origin group with caching disabled, or return <code>Cache-Control: no-store</code>.</p>
+
+  <h2 id="s7-lab">Lab: Front Door Standard Deployment</h2>
+  <div class="lab-task">
+    <div class="lab-task__header"><span class="lab-task__badge">1</span><h3 class="lab-task__title">Front Door Standard with App Service Origin (CE-21)</h3></div>
+    <div class="lab-task__body">
+      <div class="code-viewer">
+        <div class="code-viewer__header"><span class="code-viewer__lang">bash</span><button class="code-viewer__copy" data-copy-target="ce21">Copy</button></div>
+        <pre class="code-viewer__pre" id="ce21"><code><span class="tok-cmt"># CE-21: Front Door Standard + App Service origin</span>
+<span class="tok-var">RG</span>=<span class="tok-str">"rg-lab-ch09"</span>; <span class="tok-var">LOC</span>=<span class="tok-str">"eastus2"</span>
+az group create <span class="tok-flag">--name</span> <span class="tok-str">"$RG"</span> <span class="tok-flag">--location</span> <span class="tok-str">"$LOC"</span>
+
+az appservice plan create <span class="tok-flag">--name</span> plan-lab \
+  <span class="tok-flag">--resource-group</span> <span class="tok-str">"$RG"</span> <span class="tok-flag">--sku</span> B1 <span class="tok-flag">--location</span> <span class="tok-str">"$LOC"</span>
+
+<span class="tok-var">APP_NAME</span>=<span class="tok-str">"lab-origin-$RANDOM"</span>
+az webapp create <span class="tok-flag">--name</span> <span class="tok-str">"$APP_NAME"</span> \
+  <span class="tok-flag">--resource-group</span> <span class="tok-str">"$RG"</span> <span class="tok-flag">--plan</span> plan-lab
+
+az afd profile create \
+  <span class="tok-flag">--profile-name</span> afd-lab <span class="tok-flag">--resource-group</span> <span class="tok-str">"$RG"</span> \
+  <span class="tok-flag">--sku</span> Standard_AzureFrontDoor
+
+az afd endpoint create \
+  <span class="tok-flag">--endpoint-name</span> ep-lab \
+  <span class="tok-flag">--profile-name</span> afd-lab <span class="tok-flag">--resource-group</span> <span class="tok-str">"$RG"</span>
+
+<span class="tok-cmt"># Clean up</span>
+az group delete <span class="tok-flag">--name</span> <span class="tok-str">"$RG"</span> <span class="tok-flag">--yes</span> <span class="tok-flag">--no-wait</span></code></pre>
+      </div>
+    </div>
+  </div>
+
+  <h2 id="s8-summary">Summary</h2>
+  <div class="table-wrap">
+    <table class="apaf-table">
+      <thead><tr><th>Concept</th><th>Key Fact</th></tr></thead>
+      <tbody>
+        <tr><td>Anycast</td><td>DNS resolves to nearest PoP; TLS terminated at the edge</td></tr>
+        <tr><td>Standard vs Premium</td><td>Premium adds Private Link origin + managed WAF + bot protection</td></tr>
+        <tr><td>Private Link origin</td><td>Origin approves connection; no public endpoint needed</td></tr>
+        <tr><td>WAF at edge</td><td>Blocks attacks before they reach origin, reduces origin load</td></tr>
+        <tr><td>Routing: Latency</td><td>Default; sends to lowest-latency origin per health probe</td></tr>
+        <tr><td>Routing: Priority</td><td>Active-passive DR; secondary if primary health fails</td></tr>
+        <tr><td>Caching</td><td>Controlled by Cache-Control; disable for dynamic API routes</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>Chapter 10 covers Network Security — NSG rule evaluation, Azure Firewall with Firewall Policy, and DDoS Protection tiers.</p>
+  <hr>
+  <p style="font-size:.8125rem;color:var(--c-text2)"><strong>Chapter:</strong> 9 of 12 &nbsp;|&nbsp; <strong>Status:</strong> v0.1 Draft &nbsp;|&nbsp; <time datetime="2026-07-08">2026-07-08</time></p>
+</article>
+</main>
+<aside class="toc-sidebar" aria-label="Table of contents">
+  <nav aria-label="On this page">
+    <h2 class="toc-sidebar__heading">On this page</h2>
+    <ol class="toc-sidebar__list" id="toc-list">
+      <li><a href="#s1-overview">1. Front Door Overview</a></li>
+      <li><a href="#s2-anycast">2. Anycast and Routing</a></li>
+      <li><a href="#s3-config">3. Configuration</a></li>
+      <li><a href="#s4-private-link">4. Private Link Origins</a></li>
+      <li><a href="#s5-waf">5. WAF at the Edge</a></li>
+      <li><a href="#s6-caching">6. Caching and CDN</a></li>
+      <li><a href="#s7-lab">7. Lab</a></li>
+      <li><a href="#s8-summary">8. Summary</a></li>
+    </ol>
+  </nav>
+</aside>
+</div>
+<footer class="site-footer" role="contentinfo">
+  <nav class="chapter-nav" aria-label="Chapter navigation">
+    <a class="chapter-nav__link" href="ch08-load-balancer-appgw.html"><span class="chapter-nav__dir">&larr; Previous</span><span class="chapter-nav__title">8. Load Balancer and App Gateway</span></a>
+    <a class="chapter-nav__link" href="ch10-network-security.html"><span class="chapter-nav__dir">Next &rarr;</span><span class="chapter-nav__title">10. Network Security</span></a>
+  </nav>
+  <p class="apaf-footer-copy">Azure Networking Deep Dive &mdash; APAF v1.0 &mdash; &copy; 2026</p>
+</footer>
+<script defer>(function(){var btn=document.getElementById('theme-toggle');if(btn)btn.addEventListener('click',function(){var c=document.documentElement.getAttribute('data-theme'),n=c==='dark'?'light':'dark';document.documentElement.setAttribute('data-theme',n);localStorage.setItem('apaf-theme',n);});document.querySelectorAll('.code-viewer__copy').forEach(function(b){b.addEventListener('click',function(){var id=b.getAttribute('data-copy-target'),el=document.getElementById(id);if(!el)return;navigator.clipboard.writeText(el.innerText||'').then(function(){b.textContent='Copied!';setTimeout(function(){b.textContent='Copy';},2000);});});});var hs=Array.from(document.querySelectorAll('.doc-article h2,.doc-article h3')),ls=document.querySelectorAll('.toc-sidebar__list a'),vis=new Set();if(hs.length&&ls.length&&'IntersectionObserver' in window){var o=new IntersectionObserver(function(es){es.forEach(function(e){e.isIntersecting?vis.add(e.target.id):vis.delete(e.target.id);});var t=null;hs.forEach(function(h){if(!t&&vis.has(h.id))t=h.id;});ls.forEach(function(a){a.classList.toggle('is-active',t&&a.getAttribute('href')==='#'+t);});},{rootMargin:'-64px 0px -70% 0px'});hs.forEach(function(h){if(h.id)o.observe(h);});}})();</script>
+</body>
+</html>
